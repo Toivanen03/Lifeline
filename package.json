@@ -1,0 +1,18 @@
+{
+  "name": "lifeline-app",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "npm-run-all --parallel mobile backend",
+    "backend": "cd backend && npm run dev",
+    "mobile": "cd mobile-app && npm start"
+  },
+  "dependencies": {
+    "npm-run-all": "^4.1.5",
+    "ssh2-sftp-client": "^12.0.0"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "lifeline-backend",
+  "version": "0.1",
+  "description": "Backend for Lifeline-app",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js",
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "Simo Toivanen",
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "type": "module",
+  "dependencies": {
+    "apollo-server-express": "^3.13.0",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^17.2.1",
+    "express": "^4.21.2",
+    "graphql": "^16.11.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.18.0",
+    "nodemailer": "^7.0.5",
+    "zod": "^4.1.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}

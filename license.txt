@@ -1,0 +1,5 @@
+You may read and view the code.
+You may not copy, redistribute, or reuse the code or parts of it without explicit written permission from the author.
+Plagiarism or re-use of the ideas, designs, or implementation details is strictly prohibited.
+
+All rights reserved © 2025 Simo Toivanen.
