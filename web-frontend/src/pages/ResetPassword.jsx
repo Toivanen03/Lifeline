@@ -14,29 +14,33 @@ const ResetPassword = ({ notify }) => {
     const navigate = useNavigate()
 
     const submit = async (event) => {
+        event.preventDefault()
         const validation = updatePasswordSchema.safeParse({ password })
         if (validation.success) {
-            event.preventDefault()
             if (password === confirmPassword) {
-                notify("OK", "success")
                 updatePassword({ variables: { currentPassword: password, newPassword: password, token: token } })
             } else {
-                notify("SALASANAT EI TÄSMÄÄ", "error")
+                notify(<div>SALASANAT EIVÄT TÄSMÄÄ</div>, "error")
             }
         } else {
-            notify("SALASANA VÄÄRÄÄ MUOTOA", "error")
+            notify(
+                <div>
+                    - Salasanan on oltava vähintään 8 merkkiä <br />
+                    - Salasanan tulee sisältää kirjaimia ja numeroita <br />
+                    - Salasanassa tulee olla vähintään yksi erikoismerkki (!@#$%^&*(),.?)
+                </div>,
+            "error"
+            )
         }
     }
 
     const [updatePassword] = useMutation(UPDATE_PASSWORD, {
-        onError: () => {
-            notify("VIRHE", "error")
-        },
         onCompleted: () => {
             login(token)
             setPassword('')
             setConfirmPassword('')
             navigate('/')
+            notify(<div>Salasanan vaihto onnistui.</div>, "success")
         },
     })
 

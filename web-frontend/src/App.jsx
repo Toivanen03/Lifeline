@@ -16,11 +16,11 @@ function App() {
 
   return (
     <>
-        <div className="d-flex flex-column justify-content-center align-items-center" style={{ height: '10vh' }}>
-          <h2 className="mt-5">Lifeline ©</h2>
-          <h3>Web Control Panel</h3>
-        </div>
-        <ToastContainer position="top-right" autoClose={3000} />
+      <div className="d-flex flex-column justify-content-center align-items-center" style={{ height: '10vh' }}>
+        <h2 className="mt-5">Lifeline ©</h2>
+        <h3>Web Control Panel</h3>
+      </div>
+      <ToastContainer position="top-right" autoClose={5000} toastStyle={{ width: "400px", textAlign: 'left' }} />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login notify={notify} />} />
