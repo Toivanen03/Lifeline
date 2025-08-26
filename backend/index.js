@@ -7,6 +7,7 @@ import typeDefs from './schema/typeDefs.js'
 import resolvers from './schema/resolvers.js'
 import jwt from 'jsonwebtoken'
 import User from './models/User.js'
+import { passwordResetRoutes } from './routes/passwordReset.js'
 
 dotenv.config()
 
@@ -14,6 +15,7 @@ const app = express()
 
 app.use(cors())
 app.use(express.json())
+app.use('/api', passwordResetRoutes)
 
 app.use((req, res, next) => {
     const auth = req.headers.authorization
@@ -22,6 +24,7 @@ app.use((req, res, next) => {
     }
     next()
 })
+
 
 const server = new ApolloServer({
   typeDefs,

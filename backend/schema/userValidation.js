@@ -7,7 +7,7 @@ export const createUserSchema = z.object({
     .refine(val => /[a-zA-Z]/.test(val), '\n- Salasanassa tulee olla kirjaimia')
     .refine(val => /\d/.test(val), '\n- Salasanassa tulee olla numeroita')
     .refine(val => /[!@#$%^&*(),.?":{}|<>]/.test(val), '\n- Salasanassa on oltava vähintään yksi erikoismerkki'),
-  admin: z.boolean()
+  parent: z.boolean()
 })
 
 export const validateContact = z.object({

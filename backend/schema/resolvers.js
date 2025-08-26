@@ -35,9 +35,9 @@ const resolvers = {
 
   Mutation: {
 
-    createUser: async (_root, { username, password }) => {
+    createUser: async (_root, { username, password, parent }) => {
       try {
-        createUserSchema.parse({ username, password, parent: false })
+        createUserSchema.parse({ username, password, parent })
       } catch (err) {
         if (err instanceof z.ZodError) {
           const errors = err.errors.map(e => e.message).join('\n')
@@ -47,7 +47,7 @@ const resolvers = {
       }
 
       const passwordHash = await bcrypt.hash(password, 10)
-      const user = await new User({ username, passwordHash, parent: false }).save()
+      const user = await new User({ username, passwordHash, parent }).save()
 
       const userToken = {
         username: user.username,
@@ -55,10 +55,7 @@ const resolvers = {
         parent: user.parent
       }
 
-      return {
-        value: jwt.sign(userToken, process.env.JWT_SECRET),
-        user
-      }
+      return user
     },
 
     login: async (_root, { username, password }) => {
