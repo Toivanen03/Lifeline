@@ -1,40 +1,41 @@
 import { useForm } from "react-hook-form"
-import axios from "axios"
+import { useMutation } from "@apollo/client/react"
 import { LOGIN } from "../schema/queries"
-import config from "../config/config"
 import { useContext, useState } from "react"
 import { AuthContext } from "../contexts/AuthContext"
 import { useNavigate } from "react-router-dom"
 
 const Login = ({ notify }) => {
+    const [signIn] = useMutation(LOGIN)
     const { register, handleSubmit, reset } = useForm()
     const [stayLoggedIn, setStayLoggedIn] = useState(false)
-    const BACKEND_URL = config() + '/graphQl'
     const { login } = useContext(AuthContext)
 
     const navigate = useNavigate()
 
     const onSubmit = async (formData) => {
         try {
-            const response = await axios.post(BACKEND_URL, {
-                query: LOGIN,
+            const response = await signIn({
                 variables: {
-                    username: formData.userName,
-                    password: formData.password,
+                username: formData.userName,
+                password: formData.password,
                 },
             })
 
-            const token = response.data?.data?.login?.value
+            const token = response?.data?.login?.value
 
             if (token) {
                 login(token, stayLoggedIn)
                 reset()
+                notify('Tervetuloa!', 'success')
                 navigate('/')
             } else {
-                notify(<div>PALVELINVIRHE:<br />No token received</div>, "error")
+                notify('<div>PALVELINVIRHE:<br />No token received</div>', "error")
+                return
             }
         } catch (error) {
-            notify(<div>VIRHE KIRJAUTUMISESSA: {error}<br /></div>, "error")
+            notify('<div>VIRHE KIRJAUTUMISESSA: {error}<br /></div>', "error")
+            return
         }
     }
 

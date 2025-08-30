@@ -68,33 +68,14 @@ export const LOGIN = gql`
     }
 `
 
-export const VERIFY_EMAIL_OR_INVITE = gql`
-  mutation VerifyEmailOrInvite($token: String!, $familyId: String) {
-    verifyEmailOrInvite(token: $token, familyId: $familyId) {
-      id
-      username
-      parent
-      emailVerified
-      familyId
+export const VERIFY_EMAIL = gql`
+    mutation VerifyEmail($token: String!) {
+        verifyEmail(token: $token) {
+            id
+            username
+            emailVerified
+        }
     }
-  }
-`
-
-export const GET_WEATHER = gql`
-  query GetWeather($city: String!) {
-    weather(city: $city) {
-      temp
-      description
-      wind_speed
-      temp_min
-      temp_max
-      visibility
-      clouds
-      city
-      icon
-      feels_like
-    }
-  }
 `
 
 export const DELETE_USER = gql`

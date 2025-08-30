@@ -21,6 +21,7 @@ const ResetPassword = ({ notify }) => {
                 updatePassword({ variables: { currentPassword: password, newPassword: password, token: token } })
             } else {
                 notify(<div>SALASANAT EIVÄT TÄSMÄÄ</div>, "error")
+                return
             }
         } else {
             notify(
@@ -31,6 +32,7 @@ const ResetPassword = ({ notify }) => {
                 </div>,
             "error"
             )
+            return
         }
     }
 

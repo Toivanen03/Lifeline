@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react'
+import { createContext, useState, useEffect } from 'react'
 import { getUser, saveUser, logoutUser } from '../secureStorage'
 
 export const AuthContext = createContext()

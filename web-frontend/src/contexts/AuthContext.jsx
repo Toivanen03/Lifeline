@@ -30,12 +30,12 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   const login = (newToken, stayLoggedIn = false) => {
+    const decoded = jwtDecode(newToken)
     const expiryTime = Date.now() + (stayLoggedIn ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000)
 
     localStorage.setItem('parent-token', newToken)
     localStorage.setItem('parent-token-expiry', expiryTime)
 
-    const decoded = jwtDecode(newToken)
     setToken(newToken)
     setCurrentUser(decoded)
     setIsParent(decoded.parent === true)
@@ -44,12 +44,17 @@ export const AuthProvider = ({ children }) => {
   }
 
   const logout = () => {
-    localStorage.removeItem('parent-token')
-    localStorage.removeItem('parent-token-expiry')
+    if (currentUser?.username) {
+      localStorage.removeItem(`parent-token`)
+      localStorage.removeItem(`parent-token-expiry`)
+    } else {
+      localStorage.removeItem('parent-token')
+      localStorage.removeItem('parent-token-expiry')
+    }
     setToken(null)
     setIsParent(false)
     setCurrentUser(null)
-    navigate('/')
+    navigate('/login')
   }
 
   const isLoggedIn = !!token

@@ -18,11 +18,11 @@ app.use(express.json())
 app.use('/api', passwordResetRoutes)
 
 app.use((req, res, next) => {
-    const auth = req.headers.authorization
-    if (auth && auth.startsWith('Bearer ')) {
-        req.token = auth.substring(7)
-    }
-    next()
+  const auth = req.headers.authorization
+  if (auth && auth.startsWith('Bearer ')) {
+      req.token = auth.substring(7)
+  }
+  next()
 })
 
 

@@ -1,0 +1,12 @@
+KYSY TÄSTÄ ENNEN JULKAISUA
+
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.lifeline.app",
+    "sha256_cert_fingerprints": [
+      "12:34:56:78:90:AB:CD:EF:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88"
+    ]
+  }
+}]

@@ -3,29 +3,51 @@ import { gql } from "apollo-server-express"
 const typeDefs = gql`
 
   type User {
-    id: ID!
-    username: String!
-    parent: Boolean!
+    id: ID
+    username: String
+    parent: Boolean
+    name: String
     resetToken: String
     resetTokenExpiry: String
+    token: String
+    emailVerified: Boolean
+    emailVerificationToken: String
+    familyId: ID
+  }
+
+  type Weather {
+    temp: Float
+    feels_like: Float
+    temp_min: Float
+    temp_max: Float
+    wind_speed: Float
+    clouds: Int
+    description: String
+    icon: String
+    visibility: Int
+    city: String
   }
 
   type Query {
     me: User
-    users: [User!]!
+    users: [User]
     user(id: ID!): User
+    userByEmail(email: String!): User
+    weather(city: String!): Weather
   }
 
   type Token {
-    value: String!
+    value: String
   }
 
   type Mutation {
     login(username: String!, password: String!): Token
-    createUser(username: String!, password: String!, parent: Boolean!): User
+    createUser(username: String!, password: String!, name: String!, parent: Boolean!, familyId: ID): User
     deleteUser(id: ID!): User
-    updateUser(id: ID, parent: Boolean): User
+    updateUser(id: ID!, parent: Boolean!): User
     updatePassword(currentPassword: String!, newPassword: String!, token: String): User
+    verifyEmailOrInvite(token: String, familyId: String): User
+    requestPasswordReset(email: String!): Boolean
   }
 `
 

@@ -1,8 +1,9 @@
 {
   "expo": {
-    "name": "mobile-app",
-    "slug": "mobile-app",
-    "version": "1.0.0",
+    "name": "Lifeline",
+    "slug": "lifeline",
+    "scheme": "lifeline",
+    "version": "0.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -16,6 +17,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.simo.lifeline",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -24,6 +26,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "googleSignIn": {
+        "expoClientId": "674206750994-hs5h56oqvkhkv3qqj6d738q2mie5rhrg.apps.googleusercontent.com",
+        "androidClientId": "674206750994-m20npkc7jombclfngthv1c5jhrpqhr36.apps.googleusercontent.com"
+      }
     }
   }
 }
