@@ -8,6 +8,24 @@ import { GraphQLError } from 'graphql'
 import { z } from 'zod'
 import fetch from 'node-fetch'
 
+const LATEST_PRICES_ENDPOINT = 'https://api.porssisahko.net/v1/latest-prices.json'
+
+const fetchLatestPriceData = async () => {
+  const response = await fetch(LATEST_PRICES_ENDPOINT)
+  return response.json()
+}
+
+const getPriceForDate = (date, prices) => {
+  const matchingPriceEntry = prices.find(
+    (price) =>
+      new Date(price.startDate) <= date && new Date(price.endDate) > date
+  )
+
+  if (!matchingPriceEntry) throw new Error('Ei hintatietoja valitulle päivälle!')
+
+  return matchingPriceEntry.price
+}
+
 const requireParent = (user) => {
   if (!user.parent) {
     throw new Error("Ei valtuuksia!")
@@ -16,6 +34,18 @@ const requireParent = (user) => {
 
 const resolvers = {
   Query: {
+
+    latestPrices: async () => await fetchLatestPriceData(),
+
+    priceNow: async () => {
+      const { prices } = await fetchLatestPriceData()
+      return getPriceForDate(new Date(), prices)
+    },
+
+    futurePrices: async () => {
+      const { prices } = await fetchLatestPriceData();
+      return prices;
+    },
 
     me: async (_root, _args, context) => {
       return context.currentUser || null

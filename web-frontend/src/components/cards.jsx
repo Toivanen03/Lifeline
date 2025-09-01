@@ -5,7 +5,9 @@ import Todos from "./cards/todos"
 import Schedules from "./cards/schedules"
 import Shifts from "./cards/shifts"
 import Chores from "./cards/chores"
+import Family from "./cards/family"
 import { Route } from "react-router-dom"
+import WeatherInfo from "./cards/weatherInfo"
 
 const Cards = ({ notify }) => {
 
@@ -18,6 +20,8 @@ const Cards = ({ notify }) => {
             <Route path="/schedules" element={<Schedules notify={notify} />} />
             <Route path="/shifts" element={<Shifts notify={notify} />} />
             <Route path="/chores" element={<Chores notify={notify} />} />
+            <Route path="/family" element={<Family notify={notify} />} />
+            <Route path="/weatherinfo" element={<WeatherInfo />} />
         </>
     )
 }

@@ -97,6 +97,22 @@ export const GET_WEATHER = gql`
   }
 `
 
+export const GET_CURRENT_PRICE = gql`
+  query {
+    priceNow
+  }
+`
+
+export const GET_FUTURE_PRICES = gql`
+  query {
+    futurePrices {
+      startDate
+      endDate
+      price
+    }
+  }
+`
+
 export const DELETE_USER = gql`
     mutation deleteUser($id: ID!) {
         deleteUser(id: $id) {

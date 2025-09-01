@@ -4,6 +4,14 @@
 
 body {
   margin: 0;
-  height: 100vh;
   background: url('./assets/bkgnd_horizontal.png') center/cover no-repeat;
+}
+
+.digital {
+  font-family: 'DS-Digital', sans-serif;
+  text-align: center;
+}
+
+.btn-primary {
+  background-color: gray !important;
 }

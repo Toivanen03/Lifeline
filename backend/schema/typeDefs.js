@@ -28,12 +28,25 @@ const typeDefs = gql`
     city: String
   }
 
+  type Price {
+    startDate: String
+    endDate: String
+    price: Float
+  }
+
+  type LatestPrices {
+    prices: [Price]
+  }
+
   type Query {
     me: User
     users: [User]
     user(id: ID!): User
     userByEmail(email: String!): User
     weather(city: String!): Weather
+    latestPrices: LatestPrices
+    priceNow: Float
+    futurePrices: [Price]
   }
 
   type Token {
