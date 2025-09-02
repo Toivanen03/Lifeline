@@ -78,28 +78,42 @@ const resolvers = {
       return user
     },
 
-    weather: async (_, { city }) => {
+    weather: async (_, { lat, lon, city }) => {
       const key = process.env.WEATHER_API_KEY
-      const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&APPID=${key}&units=metric&lang=fi`)
-      const data = await res.json()
+      const resLoc = await fetch(
+        `http://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${key}`
+      )
+      const locData = await resLoc.json()
+      const country = locData?.[0]?.country || ""
+      const cityName = locData?.[0]?.name || "Tuntematon"
+
+      const location = city
+        ? `${cityName} (arvioitu sijainti), ${country}`
+        : `${cityName}, ${country}`
+
+      const resWeather = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${key}&units=metric&lang=fi`
+      )
+      const w = await resWeather.json()
+
       return {
-        temp: data.main.temp,
-        feels_like: data.main.feels_like,
-        temp_min: data.main.temp_min,
-        temp_max: data.main.temp_max,
-        wind_speed: data.wind.speed,
-        clouds: data.clouds.all,
-        description: data.weather[0].description,
-        icon: data.weather[0].icon,
-        visibility: data.visibility,
-        city: data.name
+        location,
+        temp: w.main.temp,
+        feels_like: w.main.feels_like,
+        temp_min: w.main.temp_min,
+        temp_max: w.main.temp_max,
+        wind_speed: w.wind.speed,
+        clouds: w.clouds.all,
+        description: w.weather[0].description,
+        icon: w.weather[0].icon,
+        visibility: w.visibility,
       }
-    }
+    },
   },
 
   Mutation: {
 
-  createUser: async (_root, { username, password, name, parent, familyId }) => {
+    createUser: async (_root, { username, password, name, parent, familyId }) => {
       try {
         createUserSchema.parse({ username, password, name, parent })
       } catch (err) {

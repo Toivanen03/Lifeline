@@ -81,8 +81,9 @@ export const VERIFY_EMAIL_OR_INVITE = gql`
 `
 
 export const GET_WEATHER = gql`
-  query GetWeather($city: String!) {
-    weather(city: $city) {
+  query GetWeather($lat: Float!, $lon: Float!, $city: String) {
+    weather(lat: $lat, lon: $lon, city: $city) {
+      location
       temp
       description
       wind_speed
@@ -90,7 +91,6 @@ export const GET_WEATHER = gql`
       temp_max
       visibility
       clouds
-      city
       icon
       feels_like
     }

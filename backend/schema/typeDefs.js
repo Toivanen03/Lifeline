@@ -16,6 +16,7 @@ const typeDefs = gql`
   }
 
   type Weather {
+    location: String
     temp: Float
     feels_like: Float
     temp_min: Float
@@ -25,7 +26,6 @@ const typeDefs = gql`
     description: String
     icon: String
     visibility: Int
-    city: String
   }
 
   type Price {
@@ -43,7 +43,7 @@ const typeDefs = gql`
     users: [User]
     user(id: ID!): User
     userByEmail(email: String!): User
-    weather(city: String!): Weather
+    weather(lat: Float!, lon: Float!, city: String): Weather
     latestPrices: LatestPrices
     priceNow: Float
     futurePrices: [Price]

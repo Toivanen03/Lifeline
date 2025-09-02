@@ -38,7 +38,6 @@ function App() {
   if (isLoading && !currentUser) return <div>Ladataan...</div>
 
   const notify = (message, type) => {
-    toast.dismiss()
     if (type === 'success') {
       toast.success(message)
     } else if (type === 'info') {
@@ -65,7 +64,7 @@ function App() {
                   <Route path="/forgot" element={<Forgot notify={notify} />} />
                   <Route path="/reset-password" element={<ResetPassword notify={notify} />} />
                   <Route path="/emailverify" element={<EmailVerify notify={notify} />} />
-                    <Route path="/" element={<Home family={family} />}>
+                    <Route path="/" element={<Home family={family} notify={notify} />}>
                     {Cards({notify})}
                   </Route>
                 </Routes>

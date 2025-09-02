@@ -27,9 +27,9 @@ export const ClockWidget = () => {
   return (
     <>
         {clockSettings.show && (
-            <div>
+            <div style={{ borderBottom: '1px solid #ccc' }}>
             {clockSettings.digital ? (
-            <div className="d-flex justify-content-center">
+            <div className="d-flex justify-content-center mb-2">
                 <Analog value={value} />
             </div>
             ) : (

@@ -31,7 +31,6 @@ const ClockSettings = () => {
 
       {(clockSettings.show && mainSettings.showRightPanel) && 
       <>
-      
         {settingsList.map(s => (
           <div key={s.key} className="col-7 form-check form-switch d-flex justify-content-between align-items-center mb-3">
             <label htmlFor={`${s.key}Switch`} className="form-check-label mb-0 ms-4">{s.label}</label>

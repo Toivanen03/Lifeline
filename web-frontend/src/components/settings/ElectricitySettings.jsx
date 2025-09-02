@@ -11,7 +11,8 @@ const ElectricitySettings = () => {
   }
 
   const settingsList = [
-    { key: 'future', label: 'Näytä seuraavat 24h' },
+    { key: 'future', label: 'Näytä 24h taulukko' },
+    { key: 'nextHour', label: 'Näytä seuraava tunti' }
   ]
 
   return (
@@ -43,6 +44,52 @@ const ElectricitySettings = () => {
               />
           </div>
         ))}
+        <div className="col-6 d-flex justify-content-between align-items-center">
+          <label htmlFor="priceMin" className="col-form-label ms-4">
+            Halvan hinnan alaraja
+          </label>
+          <div className="d-flex align-items-center">
+            <input
+              id="priceMin"
+              type="number"
+              className="form-control"
+              style={{ width: 70, height: 30  }}
+              value={electricitySettings.priceMin}
+              onChange={(e) => {
+                let val = e.target.value === "" ? 1 : parseFloat(e.target.value)
+                if (val < 1) val = 1
+                const newMax = val > electricitySettings.priceMax ? val : electricitySettings.priceMax
+                updateElectricitySettings({ 
+                  ...electricitySettings, 
+                  priceMin: val,
+                  priceMax: newMax
+                })
+              }}
+            />
+            <span className="ms-3">snt / kWh</span>
+          </div>
+        </div>
+
+        <div className="col-6 d-flex justify-content-between align-items-center">
+          <label htmlFor="priceMax" className="col-form-label ms-4">
+            Kalliin hinnan alaraja
+          </label>
+          <div className="d-flex align-items-center">
+            <input
+              id="priceMax"
+              type="number"
+              className="form-control"
+              style={{ width: 70, height: 30 }}
+              value={electricitySettings.priceMax}
+              onChange={(e) => {
+                let val = e.target.value === "" ? 1 : parseFloat(e.target.value)
+                if (val < electricitySettings.priceMin) val = electricitySettings.priceMin
+                updateElectricitySettings({ ...electricitySettings, priceMax: val })
+              }}
+            />
+            <span className="ms-3">snt / kWh</span>
+          </div>
+        </div>
       </>
       }
     </>

@@ -1,10 +1,18 @@
 #root {
   text-align: center;
+  max-height: 100vh;
+}
+
+header {
+  top: 0;
+  width: 100vw;
+  max-height: 10vh;
 }
 
 body {
-  margin: 0;
-  background: url('./assets/bkgnd_horizontal.png') center/cover no-repeat;
+  background: url('./assets/bkgnd_horizontal.png') no-repeat;
+  background-size: cover;
+  background-position: center top;
 }
 
 .digital {
@@ -14,4 +22,5 @@ body {
 
 .btn-primary {
   background-color: gray !important;
+  border-color: black !important;
 }

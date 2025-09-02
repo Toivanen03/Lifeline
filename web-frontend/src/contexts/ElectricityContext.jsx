@@ -7,7 +7,10 @@ export const ElectricitySettingsProvider = ({ children }) => {
   const { currentUser } = useContext(AuthContext)
   const [electricitySettings, setSettings] = useState({
     show: true,
-    future: false
+    future: false,
+    nextHour: false,
+    priceMin: 5,
+    priceMax: 10
   })
 
   useEffect(() => {

@@ -27,7 +27,7 @@ const Login = ({ notify }) => {
             if (token) {
                 login(token, stayLoggedIn)
                 reset()
-                notify('Tervetuloa!', 'success')
+                notify('Tervetuloa Lifelineen!', 'success')
                 navigate('/')
             } else {
                 notify('<div>PALVELINVIRHE:<br />No token received</div>', "error")

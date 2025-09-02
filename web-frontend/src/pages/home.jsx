@@ -3,7 +3,7 @@ import { useState } from "react"
 import SidePanel from "../components/sidePanel"
 import WidgetPanel from "../components/widgetPanel"
 
-const Home = ({ family }) => {
+const Home = ({ family, notify }) => {
   const [mouseDownInsideCard, setMouseDownInsideCard] = useState(false)
 
   const navigate = useNavigate()
@@ -28,20 +28,20 @@ const Home = ({ family }) => {
   }
 
   return (
-    <div className="row flex-grow-1 overflow-hidden">
-      <div className="col-1 d-flex flex-column p-3 h-100 overflow-hidden align-items-center">
+    <div className="row h-100 mt-3 overflow-hidden">
+      <div className="col-1 align-items-center sidepanel">
         <SidePanel family={family} showCard={showCard} />
       </div>
 
-      <div className="col-9 p-5 d-flex flex-column h-100 overflow-auto"
+      <div className="col-9"
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
       >
         <Outlet />
       </div>
 
-      <div className="col-2 d-flex flex-column p-3 h-100 overflow-hidden">
-        <WidgetPanel family={family} />
+      <div className="col-2">
+        <WidgetPanel family={family} notify={notify} />
       </div>
     </div>
   )

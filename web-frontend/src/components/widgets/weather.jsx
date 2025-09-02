@@ -1,13 +1,22 @@
 import { useQuery } from "@apollo/client/react"
 import { GET_WEATHER } from "../../schema/queries"
 import { useNavigate } from "react-router-dom"
+import { useSettings } from "../../contexts/SettingsContext"
+import { useGeolocation } from "../getLocation"
 
 export const WeatherWidget = () => {
-  const { data, loading, error } = useQuery(GET_WEATHER, { variables: { city: 'Heinola,fi' } })
-  const navigate = useNavigate()
+  const coords = useGeolocation()
+  const { data, loading, error } = useQuery(GET_WEATHER, {
+    variables: coords ? { lat: coords.latitude, lon: coords.longitude, city: coords.city } : undefined,
+    skip: !coords
+  })
 
-  if (loading) return <span>Ladataan...</span>
-  if (error) return <span>Virhe haettaessa säätä</span>
+  const navigate = useNavigate()
+  const { mainSettings } = useSettings()
+
+  if (loading) return <p>Ladataan...</p>
+  if (error) return <p>Virhe: {error.message}</p>
+  if (!data || !data.weather) return <p>Ei säätietoja saatavilla.</p>
 
   const tempValue = Math.round(data.weather.temp)
   const temp = tempValue + '°C'
@@ -19,7 +28,7 @@ export const WeatherWidget = () => {
   const lowest = 'Alin ' + Math.round(data.weather.temp_min) + '°C'
   const visibility = 'Näkyvyys: ' + (data.weather.visibility / 1000).toFixed(1) + ' km'
   const clouds = 'Pilvisyys: ' + data.weather.clouds + '%'
-  const location = data.weather.city
+  const location = data.weather.location
   const icon = data.weather.icon
 
   const tempToColor = (temp) => {
@@ -66,20 +75,29 @@ export const WeatherWidget = () => {
   }
 
   return (
-    <>
-      <h6>Sää</h6>
-      <h5 className="card-title mb-2">{location}</h5>
-      <img src={`https://openweathermap.org/img/wn/${icon}@2x.png`} alt={description} style={{ width: "100px", backgroundColor: 'lightblue', borderRadius: '50%' }} className="mb-2" />
+    <div style={{ borderBottom: '1px solid #ccc' }}>
+      <h5>Sää</h5>
+      <h6 className="card-title mb-2">{location}</h6>
+      {mainSettings.weatherIcon && <img src={`https://openweathermap.org/img/wn/${icon}@2x.png`} alt={description} style={{ width: "60px", backgroundColor: 'lightblue', borderRadius: '50%' }} className="mb-2" />}
       <h5 className="card-text" style={{ color: tempToColor(tempValue) }}>
         {temp}
       </h5>
 
-      <button
-        className="btn btn-primary p-1"
-        style={{ border: '1px solid black' }}
-        onClick={additionalWeatherInfo}>
-        Lisätiedot
-      </button>
-    </>
+      <div className="justify-content-center" style={{ display: 'flex', gap: '1rem' }}>
+        <button
+          className="btn btn-primary p-0"
+          style={{ width: 100, fontSize: 14, height: 30 }}
+          onClick={() => additionalWeatherInfo('details')}>
+          Lisätiedot
+        </button>
+
+        <button
+          className="btn btn-primary p-0 mb-2"
+          style={{ width: 100, fontSize: 14, height: 30 }}
+          onClick={() => additionalWeatherInfo('5days')}>
+          5 vrk ennuste
+        </button>
+      </div>
+    </div>
   )
 }

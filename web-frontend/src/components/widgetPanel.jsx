@@ -3,7 +3,7 @@ import { useSettings } from "../contexts/SettingsContext"
 import { ClockWidget } from "./widgets/clock"
 import { ElectricityWidget } from "./widgets/electricity"
 
-const WidgetPanel = ({ family }) => {
+const WidgetPanel = ({ family, notify }) => {
   const { mainSettings } = useSettings()
 
   if (!family || !mainSettings.showRightPanel) {
@@ -11,19 +11,19 @@ const WidgetPanel = ({ family }) => {
   }
 
   return (
-    <div className="bg-light border-start h-100">
+    <div className="container bg-light h-100" style={{ borderLeft: '1px solid #ccc' }}>
 
-      <div className="border-bottom border-dark p-3">
+      <div className="p-2">
         <ClockWidget />
       </div>
 
-      <div className="border-bottom border-dark p-3">
+      <div className="p-2 mt-2">
         {mainSettings.showWeather &&
           <WeatherWidget />}
       </div>
 
-      <div className="border-bottom border-dark p-3">
-        <ElectricityWidget />
+      <div className="p-2 mt-2">
+        <ElectricityWidget notify={notify} />
       </div>
 
     </div>

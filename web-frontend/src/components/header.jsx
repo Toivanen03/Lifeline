@@ -6,26 +6,28 @@ const Header = ({ notify, family, firstname, navigate }) => {
 
     const logOut = () => {
         logout()
-        notify("Olet kirjautunut ulos", "info")
+        notify("Uloskirjautuminen onnistui.", "info")
         navigate("/login")
     }
     return (
-        <div className="row bg-dark text-white p-3 align-items-center flex-shrink-0">
-            <div className="col-3">
-                {family && <><h4>Perhe {family}</h4> <small>{firstname} kirjautuneena</small></>}
+        <header className="container-fluid bg-dark text-white p-2">
+            <div className="row align-items-center">
+                <div className="col-3">
+                    {family && <><h4>Perhe {family}</h4> <small>{firstname} kirjautuneena</small></>}
+                </div>
+                <div className="col-5 text-center">
+                    <h4>Lifeline ©</h4>
+                    <h5>Web Control Panel</h5>
+                </div>
+                <div className="col-3 text-end">
+                {family && (
+                    <button className="btn btn-outline-light btn-sm" onClick={logOut}>
+                    Kirjaudu ulos
+                    </button>
+                )}
+                </div>
             </div>
-            <div className="col-5 text-center">
-                <h4>Lifeline ©</h4>
-                <h5>Web Control Panel</h5>
-            </div>
-            <div className="col-3 text-end">
-            {family && (
-                <button className="btn btn-outline-light btn-sm" onClick={logOut}>
-                Kirjaudu ulos
-                </button>
-            )}
-            </div>
-        </div>
+        </header>
     )
 }
 

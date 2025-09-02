@@ -8,6 +8,7 @@ export const SettingsProvider = ({ children }) => {
   const [mainSettings, setSettings] = useState({
     showRightPanel: true,
     showWeather: false,
+    weatherIcon: false
   })
 
   useEffect(() => {
