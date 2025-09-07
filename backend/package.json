@@ -19,6 +19,7 @@
     "dotenv": "^17.2.1",
     "express": "^4.21.2",
     "graphql": "^16.11.0",
+    "graphql-type-json": "^0.3.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.18.0",
     "nodemailer": "^7.0.5",

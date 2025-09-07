@@ -3,7 +3,6 @@ import { AuthContext } from "../../contexts/AuthContext"
 import { useContext, useEffect } from 'react'
 import { useState } from "react"
 import { validateEmail } from "../../schema/validateUserData"
-import { useMutation } from "@apollo/client/react"
 import { FontAwesomeIcon  } from '@fortawesome/react-fontawesome'
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons'
 import { motion } from "framer-motion"

@@ -20,7 +20,142 @@ body {
   text-align: center;
 }
 
+/**** BOOTSTRAP ****/
 .btn-primary {
   background-color: gray !important;
   border-color: black !important;
+}
+
+.form-check-input {
+  border: 1px solid rgb(170, 170, 170);
+}
+
+/**** KELLO ****/
+.react-clock {
+  max-width: auto !important;
+}
+
+.digital-time {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+/**** SÄÄKARUSELLI ****/
+.carousel-control-next {
+  top: 63%;
+  right: 30%;
+  width: 40px;
+}
+
+.carousel-control-prev {
+  top: 63%;
+  left: 30%;
+  width: 40px;
+}
+
+.carousel-indicators {
+  bottom: -40px;
+}
+
+.carousel-inner {
+  min-height: 300px;
+}
+
+/**** SÄHKÖ ****/
+.custom-tooltip {
+  background: white;
+  border: 1px solid #ccc;
+  padding: 4px;
+  font-size: 0.8rem;
+}
+
+/**** SÄÄ ****/
+.weather-widget {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.weather-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.weather-buttons button {
+  flex: 1 1 40%;
+  height: 30px;
+  padding: 0;
+}
+
+/**** KALENTERI ****/
+/** WIDGET **/
+.fc {
+  font-size: 0.7rem;
+}
+
+.fc .fc-toolbar-chunk h2 {
+  font-size: 18px
+}
+
+.fc .fc-toolbar-chunk button {
+  font-size: 12px;
+  padding: 1px;
+}
+
+.fc .fc-toolbar-chunk .fc-icon-chevron-left {
+  font-size: 16px;
+}
+
+.fc .fc-toolbar-chunk .fc-icon-chevron-right {
+  font-size: 16px;
+}
+
+.fc .fc-daygrid-day-frame {
+  height: 12px !important;
+  font-size: 8px !important;
+  overflow: hidden;
+}
+
+.fc .fc-daygrid-day-frame a {
+  font-size: 10px !important;
+}
+
+.fc a {
+  text-decoration: none !important;
+  color: inherit;
+  cursor: pointer;
+}
+
+.fc .fc-daygrid-day {
+  padding: 1px;
+  border-color: rgb(224, 224, 224);
+}
+
+
+.fc .fc-day-today {
+  background-color: lightblue !important;
+}
+
+/** ISO KALENTERI **/
+.full-calendar-container .fc {
+  font-size: 1rem; /* normaali koko */
+}
+
+.full-calendar-container .fc .fc-toolbar-chunk h2 {
+  font-size: 1.5rem;
+}
+
+.full-calendar-container .fc .fc-toolbar-chunk button {
+  font-size: 1rem;
+  padding: 4px 8px;
+}
+
+.full-calendar-container .fc .fc-daygrid-day-frame {
+  height: auto !important;
+  font-size: 0.9rem !important;
+}
+
+.full-calendar-container .fc .fc-daygrid-day-frame a {
+  font-size: 0.9rem !important;
 }

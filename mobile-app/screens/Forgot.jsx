@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { View, Text, TextInput, ImageBackground, TouchableOpacity } from 'react-native'
 import { validateEmail } from '../schema/validateUserData'
 import { useNavigation } from '@react-navigation/native'

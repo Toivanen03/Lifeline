@@ -17,8 +17,8 @@ const WeatherInfo = () => {
             <div className="card shadow-lg p-4 align-items-center" onClick={e => e.stopPropagation()}
                 style={{padding: 20, border: 'solid 1px black', borderRadius: 20, backgroundColor: 'white', width: '40%'}}
                 >
-            <h4 className="mb-5">Säätiedot</h4>
-                <div className="mb-4">
+            <h4 className="mb-5">Säätiedot tänään</h4>
+                <div>
                     {weatherData && weatherData.map((item, index) => (
                         <p key={index}>{item}</p>
                     ))}

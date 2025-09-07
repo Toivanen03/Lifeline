@@ -17,11 +17,15 @@ import Cards from './components/cards'
 import { ClockSettingsProvider } from './contexts/ClockContext'
 import { SettingsProvider } from './contexts/SettingsContext'
 import { ElectricitySettingsProvider } from './contexts/ElectricityContext'
+import { CalendarSettingsProvider } from './contexts/CalendarContext'
+import { USERS } from './schema/queries'
 
 function App() {
   const { data, refetch } = useQuery(ME)
+  const { data: users } = useQuery(USERS) 
   const { isLoggedIn, isLoading, currentUser } = useContext(AuthContext)
   const navigate = useNavigate()
+  const family = users?.users || []
 
   useEffect(() => {
     if (!isLoading && !isLoggedIn) {
@@ -32,7 +36,7 @@ function App() {
     }
   }, [isLoggedIn, isLoading, navigate, refetch])
 
-  const family = isLoggedIn ? data?.me?.name.split(" ")[1] : null
+  const familyName = isLoggedIn ? data?.me?.name.split(" ")[1] : null
   const firstname = isLoggedIn ? data?.me?.name.split(" ")[0] : null
 
   if (isLoading && !currentUser) return <div>Ladataan...</div>
@@ -49,7 +53,7 @@ function App() {
   return (
     <>
       <div className='d-flex flex-column vh-100 overflow-hidden'>
-        <Header notify={notify} firstname={firstname} family={family} navigate={navigate} />
+        <Header notify={notify} firstname={firstname} familyName={familyName} navigate={navigate} />
         <ToastContainer
           position="top-right"
           autoClose={3000}
@@ -57,19 +61,21 @@ function App() {
         />
         <AnimatePresence>
           <SettingsProvider>
-            <ClockSettingsProvider>
-              <ElectricitySettingsProvider>
-                <Routes>
-                  <Route path="/login" element={<Login notify={notify} firstname={firstname} />} />
-                  <Route path="/forgot" element={<Forgot notify={notify} />} />
-                  <Route path="/reset-password" element={<ResetPassword notify={notify} />} />
-                  <Route path="/emailverify" element={<EmailVerify notify={notify} />} />
-                    <Route path="/" element={<Home family={family} notify={notify} />}>
-                    {Cards({notify})}
-                  </Route>
-                </Routes>
-              </ElectricitySettingsProvider>
-            </ClockSettingsProvider>
+            <CalendarSettingsProvider>
+              <ClockSettingsProvider>
+                <ElectricitySettingsProvider>
+                  <Routes>
+                    <Route path="/login" element={<Login notify={notify} firstname={firstname} />} />
+                    <Route path="/forgot" element={<Forgot notify={notify} />} />
+                    <Route path="/reset-password" element={<ResetPassword notify={notify} />} />
+                    <Route path="/emailverify" element={<EmailVerify notify={notify} />} />
+                      <Route path="/" element={<Home familyName={familyName} notify={notify} family={family} />}>
+                      {Cards({notify, family})}
+                    </Route>
+                  </Routes>
+                </ElectricitySettingsProvider>
+              </ClockSettingsProvider>
+            </CalendarSettingsProvider>
           </SettingsProvider>
         </AnimatePresence>
       </div>

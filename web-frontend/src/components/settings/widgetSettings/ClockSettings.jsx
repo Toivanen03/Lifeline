@@ -1,5 +1,5 @@
-import { useClockSettings } from "../../contexts/ClockContext"
-import { useSettings } from "../../contexts/SettingsContext"
+import { useClockSettings } from "../../../contexts/ClockContext"
+import { useSettings } from "../../../contexts/SettingsContext"
 
 const ClockSettings = () => {
   const { clockSettings, updateClockSettings } = useClockSettings()

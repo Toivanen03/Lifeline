@@ -3,32 +3,44 @@ import { AuthContext } from "./AuthContext"
 
 const ElectricityContext = createContext()
 
+const defaultSettings = {
+  show: true,
+  future: false,
+  nextHour: false,
+  priceMin: 5,
+  priceMax: 10,
+}
+
 export const ElectricitySettingsProvider = ({ children }) => {
   const { currentUser } = useContext(AuthContext)
-  const [electricitySettings, setSettings] = useState({
-    show: true,
-    future: false,
-    nextHour: false,
-    priceMin: 5,
-    priceMax: 10
+
+  const [electricitySettings, setElectricitySettings] = useState(() => {
+    if (!currentUser) return defaultSettings
+    const saved = localStorage.getItem(`${currentUser.username}.electricitySettings`)
+    return saved ? JSON.parse(saved) : defaultSettings
   })
 
-  useEffect(() => {
-    if (!currentUser) return
-    const saved = localStorage.getItem(`${currentUser.username}.electricitySettings`)
-    if (saved) {
-      setSettings(JSON.parse(saved))
-    }
-  }, [currentUser])
-
   const updateElectricitySettings = (newSettings) => {
-    if (!currentUser) return
-    setSettings(newSettings)
-    localStorage.setItem(`${currentUser.username}.electricitySettings`, JSON.stringify(newSettings))
+    setElectricitySettings(newSettings)
+    if (currentUser) {
+      localStorage.setItem(`${currentUser.username}.electricitySettings`, JSON.stringify(newSettings))
+    }
   }
 
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(
+        `${currentUser.username}.electricitySettings`,
+        JSON.stringify(electricitySettings)
+      )
+    }
+  }, [electricitySettings, currentUser])
+
   return (
-    <ElectricityContext.Provider value={{ electricitySettings, updateElectricitySettings }}>
+    <ElectricityContext.Provider value={{
+      electricitySettings,
+      updateElectricitySettings
+    }}>
       {children}
     </ElectricityContext.Provider>
   )

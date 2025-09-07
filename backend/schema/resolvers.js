@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import User from '../models/User.js'
 import { createUserSchema } from './userValidation.js'
+import NotificationSettings from '../models/Notification.js'
 import { GraphQLError } from 'graphql'
 import { z } from 'zod'
 import fetch from 'node-fetch'
@@ -33,6 +34,7 @@ const requireParent = (user) => {
 }
 
 const resolvers = {
+
   Query: {
 
     latestPrices: async () => await fetchLatestPriceData(),
@@ -43,8 +45,8 @@ const resolvers = {
     },
 
     futurePrices: async () => {
-      const { prices } = await fetchLatestPriceData();
-      return prices;
+      const { prices } = await fetchLatestPriceData()
+      return prices
     },
 
     me: async (_root, _args, context) => {
@@ -100,14 +102,50 @@ const resolvers = {
         location,
         temp: w.main.temp,
         feels_like: w.main.feels_like,
-        temp_min: w.main.temp_min,
-        temp_max: w.main.temp_max,
         wind_speed: w.wind.speed,
         clouds: w.clouds.all,
         description: w.weather[0].description,
         icon: w.weather[0].icon,
         visibility: w.visibility,
       }
+    },
+
+    forecast: async (_, { lat, lon }) => {
+      const key = process.env.WEATHER_API_KEY
+
+      const res = await fetch(
+        `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${key}&units=metric&lang=fi`
+      )
+      const data = await res.json()
+
+      return data.list.map(item => ({
+        time: item.dt_txt,
+        temp: item.main.temp,
+        feels_like: item.main.feels_like,
+        description: item.weather[0].description,
+        icon: item.weather[0].icon,
+        wind_speed: item.wind.speed
+      }))
+    },
+
+    notificationSettings: async (_root, _args, context) => {
+      const currentUser = context.currentUser
+      if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
+
+      let settings = await NotificationSettings.findOne({ familyId: currentUser.familyId })
+      if (!settings) {
+        settings = new NotificationSettings({
+          familyId: currentUser.familyId,
+          electricity: [],
+          calendar: [],
+          shopping: [],
+          todo: [],
+          chores: []
+        })
+        await settings.save()
+      }
+
+      return settings
     },
   },
 
@@ -132,7 +170,7 @@ const resolvers = {
         finalFamilyId = new mongoose.Types.ObjectId()
       } else {
         if (!familyId) throw new Error("familyId puuttuu lapselta")
-        finalFamilyId = mongoose.Types.ObjectId(familyId)
+        finalFamilyId = new mongoose.Types.ObjectId(String(familyId))
       }
 
       const user = await new User({
@@ -257,6 +295,61 @@ const resolvers = {
       user.emailVerified = true
       await user.save()
       return user
+    },
+
+    setChildNotificationPermission: async (_root, { userId, type, canManage }, context) => {
+        const currentUser = context.currentUser
+        if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
+        if (!currentUser.parent) throw new Error("Ei valtuuksia")
+
+        const targetUser = await User.findById(userId)
+        if (!targetUser) throw new Error("Käyttäjää ei löytynyt")
+        if (targetUser.familyId.toString() !== currentUser.familyId.toString()) {
+          throw new Error("Ei valtuuksia muuttaa tämän käyttäjän asetuksia")
+        }
+
+        if (!targetUser.notificationPermissions) {
+          targetUser.notificationPermissions = {
+            electricity: false,
+            calendar: false,
+            shopping: false,
+            todo: false,
+            chores: false
+          }
+        }
+
+        targetUser.notificationPermissions[type] = canManage
+        await targetUser.save()
+
+        return targetUser
+    },
+
+    updateNotificationSettings: async (_root, { userId, type, enabled }, context) => {
+      const currentUser = context.currentUser
+      if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
+
+      let settings = await NotificationSettings.findOne({ familyId: currentUser.familyId })
+      if (!settings) {
+        settings = new NotificationSettings({
+          familyId: currentUser.familyId,
+          electricity: [],
+          calendar: [],
+          shopping: [],
+          todo: [],
+          chores: []
+        })
+        await settings.save()
+      }
+
+      const existing = settings[type].find(e => e.userId.toString() === userId)
+      if (existing) {
+        existing.enabled = enabled
+      } else {
+        settings[type].push({ userId, enabled })
+      }
+
+      await settings.save()
+      return settings
     }
   }
 }

@@ -1,0 +1,54 @@
+import { useCalendarSettings } from "../../../contexts/CalendarContext"
+import { useSettings } from "../../../contexts/SettingsContext"
+
+const CalendarSettings = () => {
+  const { calendarSettings, updateCalendarSettings } = useCalendarSettings()
+  const { mainSettings } = useSettings()
+
+  const toggle = (field) => {
+    const newState = { ...calendarSettings, [field]: !calendarSettings[field] }
+    updateCalendarSettings(newState)
+  }
+
+  const settingsList = [
+    { key: 'Eka', label: 'Optio 1' },
+    { key: 'Toka', label: 'Optio 2' },
+    { key: 'Kolmas', label: 'Optio 3' },
+  ]
+
+  return (
+    <>
+      {mainSettings.showRightPanel && (
+        <div className="col-7 form-check form-switch d-flex justify-content-between align-items-center mb-3">
+          <h5 className="form-check-label mb-0">Näytä kalenteri</h5>
+            <input
+              className="form-check-input"
+              id="showSwitch"
+              type="checkbox"
+              checked={calendarSettings.show}
+              onChange={() => toggle('show')}
+            />
+        </div>
+      )}
+
+      {(calendarSettings.show && mainSettings.showRightPanel) && 
+      <>
+        {settingsList.map(s => (
+          <div key={s.key} className="col-7 form-check form-switch d-flex justify-content-between align-items-center mb-3">
+            <label htmlFor={`${s.key}Switch`} className="form-check-label mb-0 ms-4">{s.label}</label>
+              <input
+                id={`${s.key}Switch`}
+                type="checkbox"
+                className="form-check-input"
+                checked={calendarSettings[s.key]}
+                onChange={() => toggle(s.key)}
+              />
+          </div>
+        ))}
+      </>
+      }
+    </>
+  )
+}
+
+export default CalendarSettings

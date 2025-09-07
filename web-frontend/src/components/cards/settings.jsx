@@ -1,20 +1,23 @@
-import ClockSettings from "../settings/ClockSettings"
-import ElectricitySettings from "../settings/ElectricitySettings"
+import ClockSettings from "../settings/widgetSettings/ClockSettings"
+import ElectricitySettings from "../settings/widgetSettings/ElectricitySettings"
+import CalendarSettings from "../settings/widgetSettings/CalendarSettings"
+import { useCalendarSettings } from "../../contexts/CalendarContext"
 import { useSettings } from "../../contexts/SettingsContext"
 import { useClockSettings } from "../../contexts/ClockContext"
 import { useElectricitySettings } from "../../contexts/ElectricityContext"
 import { motion } from "framer-motion"
 import { useEffect } from "react"
 
-const Settings = () => {
+const Settings = ({ family }) => {
     const { mainSettings, updateMainSettings } = useSettings()
     const { clockSettings } = useClockSettings()
     const { electricitySettings } = useElectricitySettings()
+    const { calendarSettings } = useCalendarSettings()
 
     const toggle = (field) => {
         const newState = { ...mainSettings, [field]: !mainSettings[field] }
         if (field === "showRightPanel" && newState.showRightPanel) {
-        const widgetsOn = newState.showWeather || clockSettings.show || electricitySettings.show
+        const widgetsOn = newState.showWeather || clockSettings.show || electricitySettings.show || calendarSettings.show
         if (!widgetsOn) {
             clockSettings.show = true
         }
@@ -27,11 +30,12 @@ const Settings = () => {
     ]
 
     useEffect(() => {
-        const widgetsOn = mainSettings.showWeather || clockSettings.show || electricitySettings.show
+        const widgetsOn = mainSettings.showWeather || clockSettings.show || electricitySettings.show || calendarSettings.show
         if (!widgetsOn && mainSettings.showRightPanel) {
             updateMainSettings({ ...mainSettings, showRightPanel: false })
         }
-    }, [mainSettings, updateMainSettings])
+    }, [mainSettings, clockSettings, electricitySettings, calendarSettings, updateMainSettings])
+
 
     return (
         <motion.div
@@ -101,7 +105,10 @@ const Settings = () => {
                     )}
 
 {/* SÄHKÖN HINTATIEDOT */}
-                    <ElectricitySettings />
+                    <ElectricitySettings family={family} />
+
+{/* KALENTERIN ASETUKSET */}
+                    <CalendarSettings />
                 </div>
             </div>
         </div>
