@@ -5,7 +5,7 @@ import dayGridPlugin from "@fullcalendar/daygrid"
 import interactionPlugin from "@fullcalendar/interaction"
 import fiLocale from "@fullcalendar/core/locales/fi"
 
-export const CalendarWidget = ({ notify }) => {
+export const CalendarWidget = () => {
   const { calendarSettings } = useCalendarSettings()
 
   const navigate = useNavigate()
@@ -29,7 +29,13 @@ export const CalendarWidget = ({ notify }) => {
               height="240px"
           />
           </div>
-        <button className="btn btn-primary mb-3" style={{ padding: 3 }}>Avaa täysikokoisena</button>
+          <button 
+              className="btn btn-primary mb-3" 
+              style={{ padding: 3 }}
+              onClick={() => navigate('/calendar')}
+            >
+              Avaa täysikokoisena
+          </button>
         </>
       )}
     </>

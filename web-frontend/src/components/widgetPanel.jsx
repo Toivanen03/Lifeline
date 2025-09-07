@@ -31,7 +31,7 @@ const WidgetPanel = ({ familyName, notify, family }) => {
   </div>
 
   <div className="p-0 calendar mb-2 mt-auto flex-shrink-0">
-    <CalendarWidget notify={notify} />
+    <CalendarWidget />
   </div>
 </div>
 

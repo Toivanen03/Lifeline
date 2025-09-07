@@ -30,9 +30,10 @@ const Family = ({ family }) => {
       transition={{ duration: 0.4 }}
       className="d-flex justify-content-center align-items-start mt-5"
     >
-      <div className="card shadow-lg" style={{ border: '1px solid black', borderRadius: 20, backgroundColor: 'white', width: '70%', maxHeight: '100%' }}>
+      <div className="card shadow-lg" style={{ border: '1px solid black', borderRadius: 20, backgroundColor: 'white', width: '70%' }}>
           <h2 className="mb-4">Perhe {familyName}</h2>
           <h4 className='mb-4'>Ilmoitusasetukset</h4>
+          <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
           {notificationTypes.map(n => (
             <NotificationSettings
               key={n.type}
@@ -44,6 +45,7 @@ const Family = ({ family }) => {
               family={family}
             />
           ))}
+          </div>
       </div>
     </motion.div>
   )
