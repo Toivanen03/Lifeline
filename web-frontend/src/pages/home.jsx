@@ -13,7 +13,7 @@ const Home = ({ familyName, notify, family }) => {
   }
 
     const handleMouseDown = (e) => {
-    if (e.target.closest('.card')) {
+    if (e.target.closest('.card') || e.target.closest('.modal')) {
       setMouseDownInsideCard(true)
     } else {
       setMouseDownInsideCard(false)
