@@ -1,7 +1,7 @@
 import { Modal, Button, Form } from "react-bootstrap"
 import { useState, useEffect } from "react"
 
-const CalendarEventModal = ({ show, handleClose, date, onSave, eventToEdit }) => {
+const CalendarEventModal = ({ show, handleClose, date, onSave, onDelete, eventToEdit, notify }) => {
   const [title, setTitle] = useState(eventToEdit?.title || "")
   const [details, setDetails] = useState("")
   const [allDay, setAllDay] = useState(false)
@@ -10,21 +10,27 @@ const CalendarEventModal = ({ show, handleClose, date, onSave, eventToEdit }) =>
   const [prevTimes, setPrevTimes] = useState(null)
 
   useEffect(() => {
-    if (date && !eventToEdit) {
+    if (!show) return
+    if (eventToEdit) {
+      setTitle(eventToEdit.title)
+      setDetails(eventToEdit.details || "")
+      setStart(new Date(eventToEdit.start))
+      setEnd(new Date(eventToEdit.end))
+      setAllDay(eventToEdit.allDay)
+    } else if (date) {
+      setTitle("")
+      setDetails("")
+      setAllDay(false)
       setStart(date.start)
       setEnd(date.end)
+    } else {
+      setTitle("")
+      setDetails("")
+      setAllDay(false)
+      setStart(new Date())
+      setEnd(new Date())
     }
-  }, [date, eventToEdit])
-
-  useEffect(() => {
-    if (eventToEdit) {
-        setTitle(eventToEdit.title)
-        setDetails(eventToEdit.details || "")
-        setStart(new Date(eventToEdit.start))
-        setEnd(new Date(eventToEdit.end))
-        setAllDay(eventToEdit.allDay)
-    }
-  }, [eventToEdit])
+  }, [show, eventToEdit, date])
 
   const toLocalDateTimeString = (date) => {
     if (!date) return ""
@@ -52,7 +58,10 @@ const CalendarEventModal = ({ show, handleClose, date, onSave, eventToEdit }) =>
   }
 
   const handleSave = () => {
-    if (title.trim() === "") return
+    if (title.trim() === "") {
+      notify("Lisää tapahtumalle otsikko.", "info")
+      return
+    }
     onSave({
       id: eventToEdit?.id,
       title,
@@ -65,6 +74,13 @@ const CalendarEventModal = ({ show, handleClose, date, onSave, eventToEdit }) =>
     setDetails("")
     setAllDay(false)
     handleClose()
+  }
+
+  const handleDelete = () => {
+    if (window.confirm("Haluatko varmasti poistaa merkinnän?")) {
+      onDelete(eventToEdit.id)
+      console.log("Poistettu")
+    }
   }
 
   return (
@@ -82,7 +98,6 @@ const CalendarEventModal = ({ show, handleClose, date, onSave, eventToEdit }) =>
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Kirjoita tapahtuman nimi"
             />
           </Form.Group>
 
@@ -93,7 +108,6 @@ const CalendarEventModal = ({ show, handleClose, date, onSave, eventToEdit }) =>
               rows={2}
               value={details}
               onChange={(e) => setDetails(e.target.value)}
-              placeholder="Esim. paikka, osallistujat..."
             />
           </Form.Group>
 
@@ -136,6 +150,9 @@ const CalendarEventModal = ({ show, handleClose, date, onSave, eventToEdit }) =>
         <Button variant="primary" onClick={handleSave}>
           Tallenna
         </Button>
+        {eventToEdit && <Button variant="danger" onClick={handleDelete}>
+          Poista
+        </Button>}
       </Modal.Footer>
     </Modal>
   )

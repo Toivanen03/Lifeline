@@ -34,7 +34,7 @@ export const CalendarWidget = () => {
               style={{ padding: 3 }}
               onClick={() => navigate('/calendar')}
             >
-              Avaa täysikokoisena
+              Avaa kalenteri
           </button>
         </>
       )}

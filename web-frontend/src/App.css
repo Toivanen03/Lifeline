@@ -21,9 +21,12 @@ body {
 }
 
 /**** BOOTSTRAP ****/
+.btn {
+  border-color: black !important;
+}
+
 .btn-primary {
   background-color: gray !important;
-  border-color: black !important;
 }
 
 .form-check-input {
@@ -158,4 +161,28 @@ body {
 
 .full-calendar-container .fc .fc-daygrid-day-frame a {
   font-size: 0.9rem !important;
+}
+
+thead .fc-scroller {
+  overflow: hidden !important;
+}
+
+.fc-timegrid-slot-label {
+  display: flex;
+  justify-content: center !important;
+  align-items: center !important;
+  font-size: 14px;
+  font-weight: bold;
+  min-width: 150px;
+}
+
+.fc-timegrid-slot-label[data-time*=":30:00"] {
+  font-size: 11px;
+  color: gray;
+  font-weight: normal;
+  padding-left: 10px !important;
+}
+
+.fc-timegrid-event {
+  max-width: 70%;
 }
