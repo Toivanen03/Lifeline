@@ -21,7 +21,9 @@ const Header = ({ notify, familyName, firstname, navigate }) => {
                 </div>
                 <div className="col-3 text-end">
                 {familyName && (
-                    <button className="btn btn-outline-light btn-sm" onClick={logOut}>
+                    <button
+                        className="btn btn-outline-light btn-sm"
+                        onClick={logOut}>
                     Kirjaudu ulos
                     </button>
                 )}

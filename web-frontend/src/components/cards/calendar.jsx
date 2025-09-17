@@ -6,15 +6,16 @@ import timeGridPlugin from "@fullcalendar/timegrid"
 import interactionPlugin from "@fullcalendar/interaction"
 import multiMonthPlugin from "@fullcalendar/multimonth"
 import fiLocale from "@fullcalendar/core/locales/fi"
-import { useRef, useState } from "react"
+import { useRef, useState, useEffect } from "react"
 import { Button } from "react-bootstrap"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faArrowRight, faArrowLeft, faArrowUp, faArrowDown } from "@fortawesome/free-solid-svg-icons"
 import CalendarEventModal from "../calendar/calendarEventModal"
+import { holidays } from "../calendar/calendarEventEngine"
 
 const CalendarFull = ({ notify }) => {
   const { state } = useLocation()
-  const [events, setEvents] = useState([])
+  const [events, setEvents] = useState([...holidays])
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [selectedDate, setSelectedDate] = useState(state?.date || null)
@@ -22,6 +23,37 @@ const CalendarFull = ({ notify }) => {
   const [currentDate, setCurrentDate] = useState(new Date(selectedDate || Date.now()))
 
   const calendarRef = useRef(null)
+
+  console.log(holidays)
+
+  useEffect(() => {
+    if (state?.date) {
+      const newDate = new Date(state.date)
+      setCurrentDate(newDate)
+      setView(state.initialView || "timeGridDay")
+      calendarRef.current?.getApi().changeView(state.initialView || "timeGridDay", newDate)
+    }
+  }, [state])
+
+  const weekdays = [
+    "sunnuntai",
+    "maanantai",
+    "tiistai",
+    "keskiviikko",
+    "torstai",
+    "perjantai",
+    "lauantai",
+  ]
+
+  const formatDayTitle = (date) => {
+    const weekday = weekdays[date.getDay()]
+    const day = date.toLocaleDateString("fi-FI", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    })
+    return `${capitalize(weekday)}, ${day}`
+  }
 
   const scrollEarly = () => {
     const view = calendarRef.current.getApi()
@@ -50,12 +82,7 @@ const CalendarFull = ({ notify }) => {
       case "multiMonthYear":
         return currentDate.getFullYear()
       case "timeGridDay":
-        return capitalize(currentDate.toLocaleDateString("fi-FI", {
-          weekday: "long",
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        }))
+        return formatDayTitle(currentDate)
       case "timeGridWeek":
         return formatWeekTitle(currentDate)
       default:
@@ -184,8 +211,7 @@ const CalendarFull = ({ notify }) => {
 
     const isLateEvent = (event) => {
     const startHour = new Date(event.start).getHours()
-    const endHour = new Date(event.end).getHours()
-    return startHour >= 16 || endHour >= 16
+    return startHour >= 16
     }
 
     const hasEarlyEvents = visibleEvents.some(isEarlyEvent)

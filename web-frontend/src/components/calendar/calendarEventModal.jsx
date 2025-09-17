@@ -70,6 +70,7 @@ const CalendarEventModal = ({ show, handleClose, date, onSave, onDelete, eventTo
       allDay,
       details,
     })
+    notify("Merkintä lisätty onnistuneesti!", "success")
     setTitle("")
     setDetails("")
     setAllDay(false)

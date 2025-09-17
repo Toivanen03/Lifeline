@@ -1,6 +1,5 @@
 #root {
   text-align: center;
-  max-height: 100vh;
 }
 
 header {
@@ -9,10 +8,13 @@ header {
   max-height: 10vh;
 }
 
+header .btn-outline-light {
+  border-color: white !important;
+}
+
 body {
-  background: url('./assets/bkgnd_horizontal.png') no-repeat;
+  background: url('./assets/bkgnd_horizontal.png') no-repeat center top;
   background-size: cover;
-  background-position: center top;
 }
 
 .digital {
@@ -20,22 +22,16 @@ body {
   text-align: center;
 }
 
-/**** BOOTSTRAP ****/
 .btn {
-  border-color: black !important;
+  border-color: #000 !important;
 }
 
 .btn-primary {
-  background-color: gray !important;
+  background-color: #808080 !important;
 }
 
 .form-check-input {
-  border: 1px solid rgb(170, 170, 170);
-}
-
-/**** KELLO ****/
-.react-clock {
-  max-width: auto !important;
+  border: 1px solid #aaa;
 }
 
 .digital-time {
@@ -43,17 +39,18 @@ body {
   font-weight: bold;
 }
 
-/**** SÄÄKARUSELLI ****/
-.carousel-control-next {
+.carousel-control-next,
+.carousel-control-prev {
   top: 63%;
-  right: 30%;
   width: 40px;
 }
 
+.carousel-control-next {
+  right: 30%;
+}
+
 .carousel-control-prev {
-  top: 63%;
   left: 30%;
-  width: 40px;
 }
 
 .carousel-indicators {
@@ -64,15 +61,13 @@ body {
   min-height: 300px;
 }
 
-/**** SÄHKÖ ****/
 .custom-tooltip {
-  background: white;
+  background: #fff;
   border: 1px solid #ccc;
   padding: 4px;
   font-size: 0.8rem;
 }
 
-/**** SÄÄ ****/
 .weather-widget {
   display: flex;
   flex-direction: column;
@@ -85,47 +80,43 @@ body {
   gap: 0.5rem;
   flex-wrap: wrap;
 }
+
 .weather-buttons button {
   flex: 1 1 40%;
   height: 30px;
   padding: 0;
 }
 
-/**** KALENTERI ****/
-/** WIDGET **/
 .fc {
   font-size: 0.7rem;
 }
 
 .fc .fc-toolbar-chunk h2 {
-  font-size: 18px
+  font-size: 1.125rem;
 }
 
 .fc .fc-toolbar-chunk button {
-  font-size: 12px;
+  font-size: 0.75rem;
   padding: 1px;
 }
 
-.fc .fc-toolbar-chunk .fc-icon-chevron-left {
-  font-size: 16px;
-}
-
+.fc .fc-toolbar-chunk .fc-icon-chevron-left,
 .fc .fc-toolbar-chunk .fc-icon-chevron-right {
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 .fc .fc-daygrid-day-frame {
-  height: 12px !important;
-  font-size: 8px !important;
+  height: 12px;
+  font-size: 0.5rem;
   overflow: hidden;
 }
 
 .fc .fc-daygrid-day-frame a {
-  font-size: 10px !important;
+  font-size: 0.625rem;
 }
 
 .fc a {
-  text-decoration: none !important;
+  text-decoration: none;
   color: inherit;
   cursor: pointer;
 }
@@ -135,14 +126,12 @@ body {
   border-color: rgb(224, 224, 224);
 }
 
-
 .fc .fc-day-today {
-  background-color: lightblue !important;
+  border: 2px solid blue;
 }
 
-/** ISO KALENTERI **/
 .full-calendar-container .fc {
-  font-size: 1rem; /* normaali koko */
+  font-size: 1rem;
 }
 
 .full-calendar-container .fc .fc-toolbar-chunk h2 {
@@ -155,34 +144,52 @@ body {
 }
 
 .full-calendar-container .fc .fc-daygrid-day-frame {
-  height: auto !important;
-  font-size: 0.9rem !important;
+  height: auto;
+  font-size: 0.9rem;
 }
 
 .full-calendar-container .fc .fc-daygrid-day-frame a {
-  font-size: 0.9rem !important;
+  font-size: 0.9rem;
 }
 
 thead .fc-scroller {
-  overflow: hidden !important;
+  overflow: hidden;
 }
 
 .fc-timegrid-slot-label {
   display: flex;
-  justify-content: center !important;
-  align-items: center !important;
-  font-size: 14px;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.875rem;
   font-weight: bold;
   min-width: 150px;
 }
 
 .fc-timegrid-slot-label[data-time*=":30:00"] {
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: gray;
   font-weight: normal;
-  padding-left: 10px !important;
+  padding-left: 10px;
 }
 
 .fc-timegrid-event {
   max-width: 70%;
+}
+
+.fc-timeGridDay-view thead {
+  display: none;
+}
+
+.full-calendar-container .fc-timeGridDay-view .fc-day-today {
+  border: none;
+  background-color: lightblue;
+}
+
+.full-calendar-container .fc-timeGridWeek-view .fc-col-header-cell.fc-day-today {
+  border: none;
+  background-color: transparent;
+}
+
+.full-calendar-container .fc-timeGridWeek-view .fc-day-today {
+  background-color: lightblue;
 }
