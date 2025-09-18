@@ -11,11 +11,12 @@ import { Button } from "react-bootstrap"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faArrowRight, faArrowLeft, faArrowUp, faArrowDown } from "@fortawesome/free-solid-svg-icons"
 import CalendarEventModal from "../calendar/calendarEventModal"
-import { holidays } from "../calendar/calendarEventEngine"
+import { useSolidDayEntries } from "../calendar/calendarEventEngine"
 
 const CalendarFull = ({ notify }) => {
+  const { entries: solidEntries, loading } = useSolidDayEntries()
   const { state } = useLocation()
-  const [events, setEvents] = useState([...holidays])
+  const [events, setEvents] = useState([])
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [selectedDate, setSelectedDate] = useState(state?.date || null)
@@ -23,9 +24,6 @@ const CalendarFull = ({ notify }) => {
   const [currentDate, setCurrentDate] = useState(new Date(selectedDate || Date.now()))
 
   const calendarRef = useRef(null)
-
-  console.log(holidays)
-
   useEffect(() => {
     if (state?.date) {
       const newDate = new Date(state.date)
@@ -34,6 +32,15 @@ const CalendarFull = ({ notify }) => {
       calendarRef.current?.getApi().changeView(state.initialView || "timeGridDay", newDate)
     }
   }, [state])
+
+  useEffect(() => {
+    if (!loading && solidEntries.length > 0) {
+      const same = events.length === solidEntries.length && events.every((e, i) => e.id === solidEntries[i].id)
+      if (!same) {
+        setEvents([...solidEntries])
+      }
+    }
+  }, [solidEntries, loading])
 
   const weekdays = [
     "sunnuntai",
@@ -44,6 +51,8 @@ const CalendarFull = ({ notify }) => {
     "perjantai",
     "lauantai",
   ]
+
+  const nameDays = events.filter(event => event.classNames?.includes('nameDay'))
 
   const formatDayTitle = (date) => {
     const weekday = weekdays[date.getDay()]
@@ -207,15 +216,47 @@ const CalendarFull = ({ notify }) => {
     const startHour = new Date(event.start).getHours()
     const endHour = new Date(event.end).getHours()
     return startHour < 6 || endHour < 6
-    }
+  }
 
-    const isLateEvent = (event) => {
+  const isLateEvent = (event) => {
     const startHour = new Date(event.start).getHours()
     return startHour >= 16
-    }
+  }
 
-    const hasEarlyEvents = visibleEvents.some(isEarlyEvent)
-    const hasLateEvents = visibleEvents.some(isLateEvent)
+  const hasEarlyEvents = visibleEvents.some(isEarlyEvent)
+  const hasLateEvents = visibleEvents.some(isLateEvent)
+
+  const FindNameDay = () => {
+    if (!nameDays.length || !currentDate) return null
+
+    const month = (currentDate.getMonth() + 1).toString().padStart(2, '0')
+    const day = currentDate.getDate().toString().padStart(2, '0')
+    const todayStr = `${month}-${day}`
+
+    const result = nameDays.find(nd => nd.date === todayStr)
+    if (!result) return null
+
+    return (
+      <div>
+        {result.names.length === 1 ? (
+          <>
+            Nimipäiväänsä viettää<br />
+            {result.names[0]}
+          </>
+        ) : (
+          <>
+            Nimipäiväänsä viettävät<br />
+            {result.names.map((name, i) => (
+              <span key={i}>
+                {name}
+                {i < result.names.length - 1 ? ', ' : ''}
+              </span>
+            ))}
+          </>
+        )}
+      </div>
+    )
+  }
 
   return (
     <motion.div
@@ -236,7 +277,10 @@ const CalendarFull = ({ notify }) => {
         }}
       >
         <div className="row">
-          <div className="col-12 d-flex justify-content-center align-items-center">
+          <div className="col-3 d-flex justify-content-start align-items-start">
+            <FindNameDay />
+          </div>
+          <div className="col-9 d-flex justify-content-start align-items-center">
             <Button className="mb-4 ms-2 me-2" onClick={handleToday}>
               Tänään
             </Button>
@@ -307,7 +351,9 @@ const CalendarFull = ({ notify }) => {
                         start: info.event.start,
                         end: info.event.end,
                         allDay: info.event.allDay,
-                        details: info.event.extendedProps.details || ""
+                        details: info.event.extendedProps.details || [],
+                        links: info.event.extendedProps.links || [],
+                        classNames: info.event.classNames
                     })
                     setShowModal(true)
                     setSelectedDate(null)

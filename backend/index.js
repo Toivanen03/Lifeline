@@ -8,6 +8,9 @@ import resolvers from './schema/resolvers.js'
 import jwt from 'jsonwebtoken'
 import User from './models/User.js'
 import { passwordResetRoutes } from './routes/passwordReset.js'
+import { nameDaysRouter } from './routes/nameDays.js'
+import { flagDaysRouter } from './routes/flagDays.js'
+import { locationRouter } from './routes/location.js'
 
 dotenv.config()
 
@@ -16,6 +19,9 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 app.use('/api', passwordResetRoutes)
+app.use('/api/namedays', nameDaysRouter)
+app.use('/api/flagdays', flagDaysRouter)
+app.use('/api/location', locationRouter)
 
 app.use((req, res, next) => {
   const auth = req.headers.authorization
@@ -24,7 +30,6 @@ app.use((req, res, next) => {
   }
   next()
 })
-
 
 const server = new ApolloServer({
   typeDefs,

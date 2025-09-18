@@ -1,5 +1,26 @@
 import { gql } from '@apollo/client'
 
+export const GET_NAMEDAYS = gql`
+  query {
+    nameDays {
+      date
+      names
+    }
+  }
+`
+
+export const GET_FLAGDAYS = gql`
+  query {
+    flagDays {
+      date
+      name
+      description
+      official
+      links
+    }
+  }
+`
+
 export const ADD_USER = gql`
   mutation CreateUser(
     $username: String!, 

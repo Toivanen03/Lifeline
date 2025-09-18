@@ -8,6 +8,8 @@ const CalendarEventModal = ({ show, handleClose, date, onSave, onDelete, eventTo
   const [start, setStart] = useState(date?.start || new Date())
   const [end, setEnd] = useState(date?.end || new Date())
   const [prevTimes, setPrevTimes] = useState(null)
+  const [links] = useState(eventToEdit?.links)
+  const locked = eventToEdit?.classNames.includes('locked')
 
   useEffect(() => {
     if (!show) return
@@ -88,26 +90,27 @@ const CalendarEventModal = ({ show, handleClose, date, onSave, onDelete, eventTo
     <Modal show={show} onHide={handleClose} centered>
       <Modal.Header closeButton>
         <Modal.Title>
-          {eventToEdit ? "Muokkaa merkintää" : "Uusi merkintä"}
+          {eventToEdit ? (!locked ? "Muokkaa merkintää" : eventToEdit.title) : "Uusi merkintä"}
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <Form>
-          <Form.Group className="mb-3">
+          {!locked && <Form.Group className="mb-3">
             <Form.Label>Otsikko</Form.Label>
             <Form.Control
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
-          </Form.Group>
+          </Form.Group>}
 
           <Form.Group className="mb-3">
             <Form.Label>Lisätiedot</Form.Label>
             <Form.Control
               as="textarea"
-              rows={2}
+              rows={10}
               value={details}
+              disabled={locked}
               onChange={(e) => setDetails(e.target.value)}
             />
           </Form.Group>
@@ -117,6 +120,7 @@ const CalendarEventModal = ({ show, handleClose, date, onSave, onDelete, eventTo
               type="checkbox"
               label="Koko päivä"
               checked={allDay}
+              disabled={locked}
               onChange={handleAllDayChange}
             />
           </Form.Group>
@@ -143,15 +147,27 @@ const CalendarEventModal = ({ show, handleClose, date, onSave, onDelete, eventTo
             </>
           )}
         </Form>
+        {links?.length > 0 && (
+          <div className="mt-3">
+            <strong>Lisätietoja:</strong>
+            <ul>
+              {links.map((l, i) => (
+                <li key={i}>
+                  <a href={l} target="_blank" rel="noopener noreferrer">{l}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={handleClose}>
-          Peruuta
+          {!locked ? 'Peruuta' : 'Sulje'}
         </Button>
-        <Button variant="primary" onClick={handleSave}>
+        {!locked && <Button variant="primary" onClick={handleSave}>
           Tallenna
-        </Button>
-        {eventToEdit && <Button variant="danger" onClick={handleDelete}>
+        </Button>}
+        {eventToEdit && !locked && <Button variant="danger" onClick={handleDelete}>
           Poista
         </Button>}
       </Modal.Footer>

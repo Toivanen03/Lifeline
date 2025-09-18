@@ -8,6 +8,8 @@ import NotificationSettings from '../models/Notification.js'
 import { GraphQLError } from 'graphql'
 import { z } from 'zod'
 import fetch from 'node-fetch'
+import fs from "fs"
+import path from "path"
 
 const LATEST_PRICES_ENDPOINT = 'https://api.porssisahko.net/v1/latest-prices.json'
 
@@ -33,9 +35,21 @@ const requireParent = (user) => {
   }
 }
 
+const nameFilePath = path.join(process.cwd(), "data", "nameDays.json")
+const nameDayData = JSON.parse(fs.readFileSync(nameFilePath, "utf8"))
+
+const flagFilePath = path.join(process.cwd(), "data", "flagDays.json")
+const flagDayData = JSON.parse(fs.readFileSync(flagFilePath, "utf8"))
+
 const resolvers = {
 
   Query: {
+
+    nameDays: () => nameDayData,
+    nameDayByDate: (_, { date }) => nameDayData.filter(d => d.date === date),
+
+    flagDays: () => flagDayData,
+    flagDayByDate: (_, { date }) => flagDayData.filter(d => d.date === date),
 
     latestPrices: async () => await fetchLatestPriceData(),
 

@@ -193,3 +193,16 @@ thead .fc-scroller {
 .full-calendar-container .fc-timeGridWeek-view .fc-day-today {
   background-color: lightblue;
 }
+
+.fc-event.flag-day, .fc-event.flag-day * {
+  font-style: italic;
+  font-size: small;
+  background-color: lightblue;
+}
+
+.fc-event.holiday, .fc-event.holiday * {
+  font-style: italic;
+  font-size: small;
+  background-color: rgba(220, 220, 220, 0.5);
+  color: rgba(110, 110, 110, 0.5);
+}

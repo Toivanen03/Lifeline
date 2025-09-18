@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react"
+import config from "../config/config"
 
 export const useGeolocation = () => {
   const [coords, setCoords] = useState(null)
 
+  const url = config() + '/api/location'
+
   useEffect(() => {
     const fetchLocationByIP = async (error) => {
       try {
-        const res = await fetch('https://ipapi.co/json/')
+        const res = await fetch(`${url}`)
         const data = await res.json()
         if (data) {
           setCoords({
