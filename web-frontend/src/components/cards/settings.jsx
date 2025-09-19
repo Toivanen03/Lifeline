@@ -56,12 +56,12 @@ const Settings = ({ family }) => {
                 }}
             >
                 <div className="card-body overflow-auto">
-                <h2 className="mb-5">Asetukset</h2>
+                <h2 className="mb-4 d-flex flex-start">Sivupaneelin asetukset</h2>
 
 {/* SIVUPANEELI ON/OFF */}                
                 <div className="d-flex flex-column align-items-center">
                     <div className="col-7 form-check form-switch d-flex justify-content-between align-items-center mb-3">
-                        <label className="form-check-label mb-0" htmlFor="showSidepanelSwitch"><h4>Näytä sivupalkki</h4></label>
+                        <label className="form-check-label mb-0" htmlFor="showSidepanelSwitch"><h5>Näytä sivupalkki</h5></label>
                             <input
                             className="form-check-input"
                             id="showSidepanelSwitch"
@@ -108,6 +108,7 @@ const Settings = ({ family }) => {
                     <ElectricitySettings family={family} />
 
 {/* KALENTERIN ASETUKSET */}
+                    <h2 className="mt-3 mb-3 align-self-start">Kalenterin asetukset</h2>
                     <CalendarSettings />
                 </div>
             </div>

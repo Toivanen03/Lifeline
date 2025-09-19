@@ -194,7 +194,7 @@ thead .fc-scroller {
   background-color: lightblue;
 }
 
-.fc-event.flag-day, .fc-event.flag-day * {
+.fc-event.flagday, .fc-event.flagday * {
   font-style: italic;
   font-size: small;
   background-color: lightblue;
@@ -205,4 +205,56 @@ thead .fc-scroller {
   font-size: small;
   background-color: rgba(220, 220, 220, 0.5);
   color: rgba(110, 110, 110, 0.5);
+}
+
+.fc-event.nameday, .fc-event.nameday * {
+  background-color: transparent;
+  border: none;
+  color: rgb(160, 104, 0);
+  font-size: 13px;
+}
+
+.nameday {
+  font-weight: bold;
+  font-size: larger;
+  color: #fff;
+  text-shadow: 1px 1px 2px #000;
+}
+
+.nameday-header {
+  font-weight: bold;
+  font-size: 1.2em;
+  color: #222;
+  margin-bottom: 4px;
+}
+
+.ownnameday {
+  display: inline-block;
+  font-weight: bold;
+  color: #ff8c00;
+  animation: glowPulse 2s infinite;
+  text-shadow: 0 0 5px #ff8c00;
+}
+
+@keyframes glowPulse {
+  0%   { transform: scale(1); text-shadow: 0 0 5px #ff8c00; }
+  50%  { transform: scale(1.1); text-shadow: 0 0 10px gold; }
+  100% { transform: scale(1); text-shadow: 0 0 5px #ff8c00; }
+}
+
+@keyframes rainbow-bg {
+  0%   { background-color: #ff6b6b; }
+  25%  { background-color: #feca57; }
+  50%  { background-color: #1dd1a1; }
+  75%  { background-color: #54a0ff; }
+  100% { background-color: #ff6b6b; }
+}
+
+.nameday-container {
+  border: 1px solid black;
+  border-radius: 10px;
+  padding: 5px 10px;
+  animation: rainbow-bg 10s linear infinite;
+  color: #fff;
+  text-shadow: 1px 1px 2px #000;
 }

@@ -11,7 +11,7 @@ import WeatherInfo from "./cards/weatherInfo"
 import Forecast from "./cards/forecast"
 import CalendarFull from "./cards/calendar"
 
-const Cards = ({ notify, family }) => {
+const Cards = ({ notify, family, firstname }) => {
 
     return (
         <>
@@ -25,7 +25,7 @@ const Cards = ({ notify, family }) => {
             <Route path="/family" element={<Family family={family} />} />
             <Route path="/weatherinfo" element={<WeatherInfo />} />
             <Route path="/forecast" element={<Forecast />} />
-            <Route path="/calendar" element={<CalendarFull notify={notify} />} />
+            <Route path="/calendar" element={<CalendarFull notify={notify} firstname={firstname} />} />
         </>
     )
 }

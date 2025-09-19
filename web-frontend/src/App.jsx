@@ -70,7 +70,7 @@ function App() {
                     <Route path="/reset-password" element={<ResetPassword notify={notify} />} />
                     <Route path="/emailverify" element={<EmailVerify notify={notify} />} />
                       <Route path="/" element={<Home familyName={familyName} notify={notify} family={family} />}>
-                      {Cards({notify, family})}
+                      {Cards({notify, family, firstname})}
                     </Route>
                   </Routes>
                 </ElectricitySettingsProvider>

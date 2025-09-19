@@ -8,10 +8,10 @@ const NotificationSettings = ({
   setChildPermission,
   currentUser,
   family
-}) => {
-  const { data: settingsData, refetch: refetchSettings } = useQuery(NOTIFICATION_SETTINGS, {
-    skip: !currentUser
-  })
+  }) => {
+    const { data: settingsData, refetch: refetchSettings } = useQuery(NOTIFICATION_SETTINGS, {
+      skip: !currentUser
+    })
 
   const settings = settingsData?.notificationSettings
 

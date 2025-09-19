@@ -3,12 +3,12 @@ import { AuthContext } from "./AuthContext"
 
 const CalendarContext = createContext()
 
-  const defaultSettings = {
-    show: true,
-    Eka: true,
-    Toka: false,
-    Kolmas: true
-  }
+const defaultSettings = {
+  show: true,
+  flagDays: true,
+  nameDays: false,
+  animation: false
+}
 
 export const CalendarSettingsProvider = ({ children }) => {
   const { currentUser } = useContext(AuthContext)

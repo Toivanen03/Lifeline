@@ -11,16 +11,16 @@ const CalendarSettings = () => {
   }
 
   const settingsList = [
-    { key: 'Eka', label: 'Optio 1' },
-    { key: 'Toka', label: 'Optio 2' },
-    { key: 'Kolmas', label: 'Optio 3' },
+    { key: 'flagDays', label: 'Liputuspäivät' },
+    { key: 'nameDays', label: 'Nimipäivät' },
+    { key: 'animation', label: 'Animaatiot' }
   ]
 
   return (
     <>
       {mainSettings.showRightPanel && (
         <div className="col-7 form-check form-switch d-flex justify-content-between align-items-center mb-3">
-          <h5 className="form-check-label mb-0">Näytä kalenteri</h5>
+          <h5 className="form-check-label mb-0">Näytä kalenteri sivupaneelissa</h5>
             <input
               className="form-check-input"
               id="showSwitch"

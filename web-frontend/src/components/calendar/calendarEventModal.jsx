@@ -3,7 +3,7 @@ import { useState, useEffect } from "react"
 
 const CalendarEventModal = ({ show, handleClose, date, onSave, onDelete, eventToEdit, notify }) => {
   const [title, setTitle] = useState(eventToEdit?.title || "")
-  const [details, setDetails] = useState("")
+  const [details, setDetails] = useState(eventToEdit?.details || "")
   const [allDay, setAllDay] = useState(false)
   const [start, setStart] = useState(date?.start || new Date())
   const [end, setEnd] = useState(date?.end || new Date())
@@ -15,7 +15,11 @@ const CalendarEventModal = ({ show, handleClose, date, onSave, onDelete, eventTo
     if (!show) return
     if (eventToEdit) {
       setTitle(eventToEdit.title)
-      setDetails(eventToEdit.details || "")
+      if (eventToEdit?.classNames?.includes('nameday')) {
+        setDetails('Onnea nimpparisankareille! 🍰🌹🥳')
+      } else {
+        setDetails(eventToEdit.details || "")
+      }
       setStart(new Date(eventToEdit.start))
       setEnd(new Date(eventToEdit.end))
       setAllDay(eventToEdit.allDay)
@@ -72,7 +76,7 @@ const CalendarEventModal = ({ show, handleClose, date, onSave, onDelete, eventTo
       allDay,
       details,
     })
-    notify("Merkintä lisätty onnistuneesti!", "success")
+    notify("Merkintä tallennettu onnistuneesti!", "success")
     setTitle("")
     setDetails("")
     setAllDay(false)
@@ -82,7 +86,6 @@ const CalendarEventModal = ({ show, handleClose, date, onSave, onDelete, eventTo
   const handleDelete = () => {
     if (window.confirm("Haluatko varmasti poistaa merkinnän?")) {
       onDelete(eventToEdit.id)
-      console.log("Poistettu")
     }
   }
 
