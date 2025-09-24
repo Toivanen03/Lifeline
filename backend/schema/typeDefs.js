@@ -80,8 +80,8 @@ const typeDefs = gql`
     priceNow: Float
     futurePrices: [Price]
     notificationSettings: NotificationSettings
-    nameDays: [NameDay!]!
-    nameDayByDate(date: String!): [NameDay!]!
+    nameDays: [NameDay]!
+    nameDayByDate(date: String!): [NameDay]!
     flagDays: [FlagDay!]!
     flagDayByDate(date: String!): [FlagDay!]!
   }
@@ -92,7 +92,7 @@ const typeDefs = gql`
 
   type NameDay {
     date: String!
-    names: [String!]!
+    names: [String]!
   }
 
   type FlagDay {
@@ -100,7 +100,7 @@ const typeDefs = gql`
     name: String
     description: String
     official: Boolean
-    links: String
+    links: [String]
   }
 
   type Mutation {

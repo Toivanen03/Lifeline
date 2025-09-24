@@ -3,36 +3,7 @@ import { GET_WEATHER } from "../../schema/queries"
 import { useNavigate } from "react-router-dom"
 import { useSettings } from "../../contexts/SettingsContext"
 import { useGeolocation } from "../getLocation"
-import { getBackgroundColor } from "../cards/forecast"
-
-export const tempToColor = (temp) => {
-  const steps = [
-    { t: -30, color: 'rgb(0,0,255)' },
-    { t: -25, color: 'rgb(40,40,225)' },
-    { t: -20, color: 'rgb(60,60,255)' },
-    { t: -15, color: 'rgb(80,80,255)' },
-    { t: -10, color: 'rgb(100,100,255)' },
-    { t: -5,  color: 'rgb(120,120,255)' },
-    { t: 0,   color: 'rgb(130,130,255)' },
-    { t: 5,   color: 'rgb(255,130,130)' },
-    { t: 10,  color: 'rgb(255,115,115)' },
-    { t: 15,  color: 'rgb(255,100,100)' },
-    { t: 20,  color: 'rgb(255, 80, 80)' },
-    { t: 25,  color: 'rgb(255,40,40)' },
-    { t: 30,  color: 'rgb(255,0,0)' },
-  ]
-
-  let nearest = steps[0].color
-  let minDiff = Math.abs(temp - steps[0].t)
-  for (let i = 1; i < steps.length; i++) {
-    const diff = Math.abs(temp - steps[i].t)
-    if (diff < minDiff) {
-      minDiff = diff
-      nearest = steps[i].color
-    }
-  }
-  return nearest
-}
+import { tempToColor, getBackgroundColor } from "./utils"
 
 export const WeatherWidget = () => {
   const coords = useGeolocation()

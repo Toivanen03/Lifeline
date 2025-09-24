@@ -6,36 +6,46 @@ import timeGridPlugin from "@fullcalendar/timegrid"
 import interactionPlugin from "@fullcalendar/interaction"
 import multiMonthPlugin from "@fullcalendar/multimonth"
 import fiLocale from "@fullcalendar/core/locales/fi"
-import { useRef, useState, useEffect, useContext } from "react"
+import { useRef, useState, useEffect } from "react"
+import { useQuery } from "@apollo/client/react"
 import { Button } from "react-bootstrap"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faArrowRight, faArrowLeft, faArrowUp, faArrowDown } from "@fortawesome/free-solid-svg-icons"
+import { FontAwesomeIcon  } from '@fortawesome/react-fontawesome'
+import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import CalendarEventModal from "../calendar/calendarEventModal"
-import { useSolidDayEntries } from "../calendar/calendarEventEngine"
-import { useCalendarEvents } from "../calendar/useCalendarEvents"
-import { useUserEvents } from "../calendar/useUserEvents"
-import { useCalendarNavigation, getHeaderTitle } from '../calendar/useCalendarNavigation'
-import NameDayDisplay from "../calendar/NameDayDisplay"
 import SearchBar from "../calendar/searchBar"
 import { useCalendarSettings } from "../../contexts/CalendarContext"
+import { useEvents } from "../calendar/useEvents"
+import { insertSolidCalendarEntries } from "../calendar/calendarEventEngine"
+import { useCalendarDay } from "../../contexts/CalendarDayContext"
+import { GET_FLAGDAYS, GET_NAMEDAYS } from "../../schema/queries"
+import { InfoModal } from "../calendar/calendarEventEngine"
 
-const CalendarFull = ({ notify, firstname }) => {
-  const [selectedNameDayDate, setSelectedNameDayDate] = useState(new Date())
-  const { entries: solidEntries } = useSolidDayEntries()
-  const { state } = useLocation()
-  const calendarRef = useRef(null)
-  const { calendarSettings, updateCalendarSettings } = useCalendarSettings()
-  const { userEvents, updateUserEvent, saveUserEvent, deleteUserEvent } = useUserEvents()
-  const { view, setView, currentDate, setCurrentDate, handlePeriodChange, handleToday } =
-    useCalendarNavigation(state?.initialView || "dayGridMonth", state?.date || Date.now(), setSelectedNameDayDate)
-  const { visibleEvents, userVisibleEvents, findNameDay } = useCalendarEvents({
-    solidEntries, userEvents, view, currentDate, firstname
-  })
-  const { combinedEvents } = useCalendarEvents({ solidEntries, userEvents, view, currentDate })
+const CalendarFull = ({ notify }) => {
+  const { currentDate, setCurrentDate, selectedDate, setSelectedDate, highlightedDate, setHighlightedDate } = useCalendarDay()
+  const { events, addEvent, updateEvent, deleteEvent } = useEvents()
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [showModal, setShowModal] = useState(false)
-  const [selectedDate, setSelectedDate] = useState(state?.date || null)
-console.log(calendarSettings.animation) // YHDISTÄ ANIMAATIOON
+  const [showInfoModal, setShowInfoModal] = useState(false)
+  const [modalTitle, setModalTitle] = useState("")
+  const [flagDayLinks, setFlagDayLinks] = useState([])
+  const [namedayToday, setNamedayToday] = useState([])
+  const [flagdayToday, setFlagDayToday] = useState('')
+  const [modalInfo, setModalInfo] = useState("")
+  const [view, setView] = useState("dayGridMonth")
+  const { state } = useLocation()
+  const { calendarSettings } = useCalendarSettings()
+  const calendarRef = useRef(null)
+
+  const { data: nameData, loading: nameLoading } = useQuery(GET_NAMEDAYS)
+  const { data: flagData, loading: flagLoading } = useQuery(GET_FLAGDAYS)
+
+  const openFlagDayModal = (title, info, links) => {
+    setModalTitle(title)
+    setModalInfo(info)
+    setFlagDayLinks(links)
+    setShowInfoModal(true)
+  }
+
   useEffect(() => {
     if (state?.date) {
       const newDate = new Date(state.date)
@@ -45,43 +55,112 @@ console.log(calendarSettings.animation) // YHDISTÄ ANIMAATIOON
     }
   }, [state])
 
+  useEffect(() => {
+    if (nameLoading || flagLoading) return
+    insertSolidCalendarEntries(
+      calendarRef,
+      flagData,
+      nameData,
+      openFlagDayModal,
+      calendarSettings.flagDays,
+      calendarSettings.nameDays,
+      currentDate,
+      setNamedayToday,
+      setFlagDayToday,
+      events,
+      addEvent
+    )
+  }, [nameLoading, flagLoading, nameData, flagData, openFlagDayModal, currentDate, events, addEvent])
+
   const handleChangeView = (newView) => {
-    setSelectedNameDayDate(new Date())
     setView(newView)
-    if (calendarRef.current) {
-      calendarRef.current.getApi().changeView(newView, currentDate)
+    calendarRef.current?.getApi().changeView(newView, currentDate)
+  }
+
+  const handleHighlightedDay = (info) => {
+    const clickedElement = info.jsEvent.target
+    const highlightedCell = calendarRef.current.elRef.current.querySelector(".highlighted-day")
+
+    if (
+      highlightedCell &&
+      highlightedCell.contains(clickedElement) &&
+      (clickedElement.tagName === "A" || clickedElement.closest("a"))
+    ) {
+      info.jsEvent.preventDefault()
+      info.jsEvent.stopPropagation()
+      setShowModal(false)
+      return
     }
-  }
 
-  const isEarlyEvent = (event) => {
-    const startHour = new Date(event.start).getHours()
-    const endHour = event.end ? new Date(event.end).getHours() : startHour
-    return startHour < 6 || endHour < 6
-  }
-  const isLateEvent = (event) => new Date(event.start).getHours() >= 16
-  const hasEarlyEvents = userVisibleEvents.some(isEarlyEvent)
-  const hasLateEvents = userVisibleEvents.some(isLateEvent)
-
-  const handleDateClick = (info) => {
     const date = new Date(info.date)
-    
-    setSelectedNameDayDate(date)
-    
-    if(view === "multiMonthYear" || view === "dayGridMonth"){
-      setCurrentDate(date)
-      setView("timeGridDay")
-      calendarRef.current?.getApi().changeView("timeGridDay", date)
-    } else {
-      const end = new Date(date)
-      end.setHours(date.getHours() + 1)
-      setSelectedEvent(null)
-      setSelectedDate({ start: date, end })
+    date.setDate(date.getDate() + 1)
+    const clickedDateStr = date.toISOString().slice(0, 10)
+    const allDayCells = calendarRef.current.elRef.current.querySelectorAll("[data-date]")
+
+    allDayCells.forEach((el) => {
+      const cellDate = el.getAttribute("data-date")
+      if (cellDate === clickedDateStr) {
+        el.classList.add("highlighted-day")
+      } else {
+        el.classList.remove("highlighted-day")
+      }
+    })
+
+    setHighlightedDate(info.date)
+    const end = new Date(info.date)
+    end.setHours(date.getHours() + 1)
+    setSelectedEvent(null)
+    setSelectedDate({ start: info.date, end })
+
+    if (
+      info.date.toISOString() === selectedDate?.start?.toISOString() ||
+      view === "timeGridWeek" ||
+      view === "timeGridDay"
+    ) {
       setShowModal(true)
     }
   }
 
-  const scrollEarly = () => calendarRef.current?.getApi().scrollToTime("00:00:00")
-  const scrollLate = () => calendarRef.current?.getApi().scrollToTime("16:00:00")
+  const formatDate = (date) => {
+    if (view === "timeGridDay") {
+      const str = date.toLocaleDateString("fi-FI", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      })
+      return str.charAt(0).toUpperCase() + str.slice(1)
+    } else if (view === "timeGridWeek") {
+      const start = new Date(currentDate)
+      const day = start.getDay()
+      const diff = (day === 0 ? -6 : 1) - day
+      start.setDate(start.getDate() + diff)
+
+      const end = new Date(start)
+      end.setDate(start.getDate() + 6)
+
+      const startDay = start.getDate()
+      const endDay = end.getDate()
+      const monthNameStart = start.toLocaleDateString("fi-FI", { month: "long" })
+      const monthNameEnd = end.toLocaleDateString("fi-FI", { month: "long" })
+      const year = start.getFullYear()
+
+      if (monthNameStart === monthNameEnd) {
+        return `${startDay}. - ${endDay}. ${monthNameEnd + "ta"} ${year}`
+      } else {
+        return `${startDay}. ${monthNameStart} - ${endDay}. ${monthNameEnd + "ta"} ${year}`
+      }
+    } else if (view === "dayGridMonth") {
+      const monthRaw = new Date(currentDate).toLocaleDateString("fi-FI", { month: "long"})
+      return monthRaw.charAt(0).toUpperCase() + monthRaw.slice(1) + " " + new Date(currentDate).getFullYear()
+    } else if (view === "multiMonthYear") {
+      return new Date(currentDate).getFullYear()
+    }
+  }
+
+  const animatedClass = calendarSettings.animation
+    ? "col-2 d-flex justify-content-start align-items-start nameday-container animated"
+    : "col-2 d-flex justify-content-start align-items-start nameday-container"
 
   return (
     <motion.div
@@ -92,57 +171,71 @@ console.log(calendarSettings.animation) // YHDISTÄ ANIMAATIOON
       className="d-flex flex-column justify-content-center align-items-center"
       style={{ height: "100%" }}
     >
-      <div className="card shadow-lg p-4" style={{ border: "solid 1px black", borderRadius: 20, backgroundColor: "white", width: "100%" }}>
+      <div
+        className="card shadow-lg p-4"
+        style={{
+          border: "solid 1px black",
+          borderRadius: 20,
+          backgroundColor: "white",
+          width: "100%"
+        }}
+      >
         <div className="row">
-          <div className="col-2 d-flex justify-content-start align-items-start nameday-container">
-            <NameDayDisplay data={findNameDay(selectedNameDayDate)} firstname={firstname} />
+          <div className={animatedClass}>
+            <p>Nimipäivä {highlightedDate.toLocaleDateString("fi-FI")}</p>
+            <span>{namedayToday}</span>
           </div>
           <div className="col-6 d-flex justify-content-center align-items-start">
-            <Button className="mb-4 ms-2 me-2" onClick={() => handleToday(calendarRef, setSelectedNameDayDate)}>Tänään</Button>
+            <Button className="mb-4 ms-2 me-2" onClick={() => { view !== "timeGridDay" && handleChangeView("timeGridDay"); calendarRef.current?.getApi().today() }}>
+              Tänään
+            </Button>
             <Button className="mb-4 ms-2 me-2" onClick={() => handleChangeView("timeGridWeek")}>Viikkonäkymä</Button>
             <Button className="mb-4 ms-2 me-2" onClick={() => handleChangeView("dayGridMonth")}>Kuukausinäkymä</Button>
             <Button className="mb-4 ms-2 me-2" onClick={() => handleChangeView("multiMonthYear")}>Vuosinäkymä</Button>
           </div>
           <div className="col-4 d-flex justify-content-end align-items-start">
-            <SearchBar events={combinedEvents} setShowModal={setShowModal} setSelectedEvent={setSelectedEvent} />
+            <SearchBar
+              events={events}
+              setShowModal={setShowModal}
+              setSelectedEvent={setSelectedEvent}
+              currentDate={currentDate}
+              setShowInfoModal={setShowInfoModal}
+              setFlagDayLinks={setFlagDayLinks}
+              setModalInfo={setModalInfo}
+              setModalTitle={setModalTitle}
+            />
           </div>
         </div>
 
-        <div className="d-flex justify-content-center align-items-center mb-3">
-          <Button variant="light" onClick={() => handlePeriodChange(-1, calendarRef)}>
-            <FontAwesomeIcon icon={faArrowLeft} fontSize={15} color="#1C1C1C" />
-          </Button>
-          <h5 className="mx-3 mb-0">{getHeaderTitle({ currentDate, view })}</h5>
-          <Button variant="light" onClick={() => handlePeriodChange(1, calendarRef)}>
-            <FontAwesomeIcon icon={faArrowRight} fontSize={15} color="#1C1C1C" />
-          </Button>
-        </div>
-
-        {(view === "timeGridDay" || view === "timeGridWeek") && (
-          <div className="d-flex justify-content-center align-items-center gap-2 mb-2">
-            {hasEarlyEvents && <Button variant="light" onClick={scrollEarly}><FontAwesomeIcon icon={faArrowUp} fontSize={15} color="#1C1C1C" /></Button>}
-            {(hasEarlyEvents || hasLateEvents) && <span className="text-center">Tarkastele tapahtumia</span>}
-            {hasLateEvents && <Button variant="light" onClick={scrollLate}><FontAwesomeIcon icon={faArrowDown} fontSize={15} color="#1C1C1C" /></Button>}
+        <div className="row justify-content-center align-items-center mb-4">
+          <div className="col-1 d-flex justify-content-end">
+            <Button variant="light" className="p-2" onClick={() => { calendarRef.current?.getApi().prev(); setCurrentDate(calendarRef.current?.getApi().getDate()) }}>
+              <FontAwesomeIcon icon={faChevronLeft} />
+            </Button>
           </div>
-        )}
+          <div className="col-4 d-flex justify-content-center">
+            <h5>{formatDate(currentDate)}</h5>
+          </div>
+          <div className="col-1 d-flex justify-content-start">
+            <Button variant="light" className="p-2" onClick={() => { calendarRef.current?.getApi().next(); setCurrentDate(calendarRef.current?.getApi().getDate()) }}>
+              <FontAwesomeIcon icon={faChevronRight} />
+            </Button>
+          </div>
+        </div>
 
         <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
           <div className="full-calendar-container" style={{ width: "100%" }}>
             <FullCalendar
               ref={calendarRef}
               plugins={[dayGridPlugin, multiMonthPlugin, interactionPlugin, timeGridPlugin]}
+              allDaySlot={false}
               initialView={view}
-              initialDate={selectedDate}
+              initialDate={currentDate}
               locale={fiLocale}
               height="60vh"
               headerToolbar={false}
-              dateClick={handleDateClick}
-              allDaySlot={false}
-              slotDuration="00:30:00"
-              slotLabelInterval="00:30:00"
-              slotLabelFormat={{ hour: "2-digit", minute: "2-digit" }}
-              events={visibleEvents}
-              eventOrder="start,-duration,title"
+              dateClick={handleHighlightedDay}
+              events={events}
               eventClick={(info) => {
                 info.jsEvent.preventDefault()
                 setSelectedEvent({
@@ -150,7 +243,6 @@ console.log(calendarSettings.animation) // YHDISTÄ ANIMAATIOON
                   title: info.event.title,
                   start: info.event.start,
                   end: info.event.end,
-                  allDay: info.event.allDay,
                   details: info.event.extendedProps?.details || "",
                   links: info.event.extendedProps?.links || [],
                   classNames: info.event.classNames || []
@@ -158,40 +250,62 @@ console.log(calendarSettings.animation) // YHDISTÄ ANIMAATIOON
                 setShowModal(true)
                 setSelectedDate(null)
               }}
-              eventTimeFormat={{ hour: "2-digit", minute: "2-digit" }}
-              editable={true}
-              eventDrop={(info) => {
-                const id = info.event.id
-                if(userEvents.some(e => e.id === id)) updateUserEvent(id, { start: info.event.start.toISOString(), end: info.event.end ? info.event.end.toISOString() : undefined })
-                else info.revert()
-              }}
-              eventResize={(info) => {
-                const id = info.event.id
-                if(userEvents.some(e => e.id === id)) updateUserEvent(id, { start: info.event.start.toISOString(), end: info.event.end ? info.event.end.toISOString() : undefined })
-                else info.revert()
-              }}
-              dayHeaderDidMount={(info) => {
-                info.el.addEventListener("click", () => {
-                  const date = info.date
-                  setCurrentDate(date)
-                  setView("timeGridDay")
-                  calendarRef.current?.getApi().changeView("timeGridDay", date)
-                  setSelectedNameDayDate(date)
-                })
-              }}
+              editable
+              eventDrop={(info) => updateEvent(info.event.id, { start: info.event.start.toISOString(), end: info.event.end?.toISOString() })}
+              eventResize={(info) => updateEvent(info.event.id, { start: info.event.start.toISOString(), end: info.event.end?.toISOString() })}
+              slotDuration="00:30:00"
+              slotLabelInterval="00:30"
+              slotLabelFormat={{ hour: "2-digit", minute: "2-digit", hour12: false }}
+              eventTimeFormat={{ hour: "2-digit", minute: "2-digit", hour12: false }}
+              datesSet={() => insertSolidCalendarEntries(
+                calendarRef,
+                flagData,
+                nameData,
+                openFlagDayModal,
+                calendarSettings.flagDays,
+                calendarSettings.nameDays,
+                currentDate,
+                setNamedayToday,
+                setFlagDayToday,
+                events,
+                addEvent
+              )}
+              dayCellDidMount={(info) => {
+                if (info.date.toDateString() === new Date().toDateString()) {
+                  const el = info.el.querySelector('.fc-daygrid-day-top')
+                  if (el) {
+                    el.style.position = 'relative'
+                    el.innerHTML = `
+                      <span style="position: absolute; top: 2px; left: 2px; font-style:italic; color:darkblue; font-size:1em"><b>Tänään</b></span>
+                    `
+                  }
+                }}
+              }
             />
+
             <CalendarEventModal
               show={showModal}
               handleClose={() => setShowModal(false)}
               date={selectedDate}
               onSave={(event) => {
-                saveUserEvent(event)
-                setShowModal(false) }}
-              onDelete={(id) => {
-                deleteUserEvent(id)
-                setShowModal(false) }}
+                if (event.id) {
+                  updateEvent(event.id, event)
+                } else {
+                  addEvent(event)
+                }
+                setShowModal(false)
+              }}
+              onDelete={(id) => { deleteEvent(id); setShowModal(false) }}
               eventToEdit={selectedEvent}
               notify={notify}
+            />
+
+            <InfoModal
+              show={showInfoModal}
+              handleClose={() => setShowInfoModal(false)}
+              value={modalTitle}
+              flagDayInfo={modalInfo}
+              flagDayLinks={flagDayLinks}
             />
           </div>
         </div>

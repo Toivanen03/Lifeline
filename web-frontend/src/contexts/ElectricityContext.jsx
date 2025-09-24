@@ -13,12 +13,24 @@ const defaultSettings = {
 
 export const ElectricitySettingsProvider = ({ children }) => {
   const { currentUser } = useContext(AuthContext)
+  const [electricitySettings, setElectricitySettings] = useState(defaultSettings)
+  const [initialized, setInitialized] = useState(false)
 
-  const [electricitySettings, setElectricitySettings] = useState(() => {
-    if (!currentUser) return defaultSettings
+  useEffect(() => {
+    if (!currentUser) {
+      setElectricitySettings(defaultSettings)
+      setInitialized(true)
+      return
+    }
+
     const saved = localStorage.getItem(`${currentUser.username}.electricitySettings`)
-    return saved ? JSON.parse(saved) : defaultSettings
-  })
+    if (saved) {
+      setElectricitySettings(JSON.parse(saved))
+    } else {
+      setElectricitySettings(defaultSettings)
+    }
+    setInitialized(true)
+  }, [currentUser])
 
   const updateElectricitySettings = (newSettings) => {
     setElectricitySettings(newSettings)
@@ -27,20 +39,10 @@ export const ElectricitySettingsProvider = ({ children }) => {
     }
   }
 
-  useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem(
-        `${currentUser.username}.electricitySettings`,
-        JSON.stringify(electricitySettings)
-      )
-    }
-  }, [electricitySettings, currentUser])
+  if (!initialized) return null
 
   return (
-    <ElectricityContext.Provider value={{
-      electricitySettings,
-      updateElectricitySettings
-    }}>
+    <ElectricityContext.Provider value={{ electricitySettings, updateElectricitySettings }}>
       {children}
     </ElectricityContext.Provider>
   )

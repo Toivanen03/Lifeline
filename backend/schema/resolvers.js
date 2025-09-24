@@ -3,13 +3,12 @@ import mongoose from 'mongoose'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import User from '../models/User.js'
-import { createUserSchema } from './userValidation.js'
+import GlobalCalendarEntry from '../models/GlobalCalendarEntries.js'
 import NotificationSettings from '../models/Notification.js'
+import { createUserSchema } from './userValidation.js'
 import { GraphQLError } from 'graphql'
 import { z } from 'zod'
 import fetch from 'node-fetch'
-import fs from "fs"
-import path from "path"
 
 const LATEST_PRICES_ENDPOINT = 'https://api.porssisahko.net/v1/latest-prices.json'
 
@@ -35,21 +34,27 @@ const requireParent = (user) => {
   }
 }
 
-const nameFilePath = path.join(process.cwd(), "data", "nameDays.json")
-const nameDayData = JSON.parse(fs.readFileSync(nameFilePath, "utf8"))
-
-const flagFilePath = path.join(process.cwd(), "data", "flagDays.json")
-const flagDayData = JSON.parse(fs.readFileSync(flagFilePath, "utf8"))
-
 const resolvers = {
 
   Query: {
 
-    nameDays: () => nameDayData,
-    nameDayByDate: (_, { date }) => nameDayData.filter(d => d.date === date),
+    nameDays: async () => {
+      const doc = await GlobalCalendarEntry.findOne({ category: "nameDays" })
+      return doc ? doc.entries : []
+    },
+    nameDayByDate: async (_, { date }) => {
+      const doc = await GlobalCalendarEntry.findOne({ category: "nameDays" })
+      return doc ? doc.entries.filter(entry => entry.date === date) : []
+    },
 
-    flagDays: () => flagDayData,
-    flagDayByDate: (_, { date }) => flagDayData.filter(d => d.date === date),
+    flagDays: async () => {
+      const doc = await GlobalCalendarEntry.findOne({ category: "solidFlagDays" })
+      return doc ? doc.entries : []
+    },
+    flagDayByDate: async (_, { date }) => {
+      const doc = await GlobalCalendarEntry.findOne({ category: "solidFlagDays" })
+      return doc ? doc.entries.filter(entry => entry.date === date) : []
+    },
 
     latestPrices: async () => await fetchLatestPriceData(),
 

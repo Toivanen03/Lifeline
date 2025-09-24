@@ -12,12 +12,24 @@ const defaultSettings = {
 
 export const CalendarSettingsProvider = ({ children }) => {
   const { currentUser } = useContext(AuthContext)
+  const [calendarSettings, setCalendarSettings] = useState(defaultSettings)
+  const [initialized, setInitialized] = useState(false)
 
-  const [calendarSettings, setCalendarSettings] = useState(() => {
-    if (!currentUser) return defaultSettings
+  useEffect(() => {
+    if (!currentUser) {
+      setCalendarSettings(defaultSettings)
+      setInitialized(true)
+      return
+    }
+
     const saved = localStorage.getItem(`${currentUser.username}.calendarSettings`)
-    return saved ? JSON.parse(saved) : defaultSettings
-  })
+    if (saved) {
+      setCalendarSettings(JSON.parse(saved))
+    } else {
+      setCalendarSettings(defaultSettings)
+    }
+    setInitialized(true)
+  }, [currentUser])
 
   const updateCalendarSettings = (newSettings) => {
     setCalendarSettings(newSettings)
@@ -26,20 +38,10 @@ export const CalendarSettingsProvider = ({ children }) => {
     }
   }
 
-  useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem(
-        `${currentUser.username}.calendarSettings`,
-        JSON.stringify(calendarSettings)
-      )
-    }
-  }, [calendarSettings, currentUser])
+  if (!initialized) return null
 
   return (
-    <CalendarContext.Provider value={{
-      calendarSettings,
-      updateCalendarSettings
-    }}>
+    <CalendarContext.Provider value={{ calendarSettings, updateCalendarSettings }}>
       {children}
     </CalendarContext.Provider>
   )

@@ -105,14 +105,15 @@ body {
   font-size: 1rem;
 }
 
-.fc .fc-daygrid-day-frame {
-  height: 12px;
-  font-size: 0.5rem;
-  overflow: hidden;
+.fc-theme-standard td,
+.fc-theme-standard th {
+  border-left: none;
+  border-right: none;
 }
 
-.fc .fc-daygrid-day-frame a {
-  font-size: 0.625rem;
+.fc .fc-daygrid-day-frame {
+  border: 2px solid #ccc;
+  border-radius: 10%;
 }
 
 .fc a {
@@ -121,13 +122,50 @@ body {
   cursor: pointer;
 }
 
-.fc .fc-daygrid-day {
-  padding: 1px;
-  border-color: rgb(224, 224, 224);
+.fc .fc-day-today .fc-daygrid-day-frame {
+  border: 2px solid darkblue;
 }
 
-.fc .fc-day-today {
-  border: 2px solid blue;
+.fc .fc-day-today .fc-daygrid-day-number {
+  font-weight: bold;
+  color: darkblue;
+}
+
+.fc .fc-day-sun .fc-daygrid-day-frame {
+  background-color: #ffcaca;
+  color: red;
+  font-weight: bold;
+}
+
+.fc .fc-day-disabled {
+  background-color: transparent;
+}
+
+a.fc-col-header-cell-cushion {
+  cursor: default;
+}
+
+th.fc-col-header-cell.fc-day {
+  border-bottom: 2px solid #ccc;
+}
+
+a.fc-daygrid-day-number {
+  cursor: default;
+}
+
+table.fc-multimonth-daygrid-table {
+  border: 1px solid #ccc;
+}
+
+.fc .fc-col-header-cell {
+  background-color: transparent;
+}
+
+.fc .fc-daygrid-day.highlighted-day .fc-daygrid-day-frame {
+  border: 2px solid rgb(0, 110, 255);
+  border-radius: 10%;
+  background-color: rgba(173, 216, 230, 0.3);
+  overflow: hidden;
 }
 
 .full-calendar-container .fc {
@@ -144,12 +182,14 @@ body {
 }
 
 .full-calendar-container .fc .fc-daygrid-day-frame {
-  height: auto;
   font-size: 0.9rem;
+  padding: 2px;
+  margin: 2px;
+  height: 12vh;
 }
 
 .full-calendar-container .fc .fc-daygrid-day-frame a {
-  font-size: 0.9rem;
+  font-size: 0.675rem;
 }
 
 thead .fc-scroller {
@@ -194,31 +234,33 @@ thead .fc-scroller {
   background-color: lightblue;
 }
 
-.fc-event.flagday, .fc-event.flagday * {
+.fc .flagday {
   font-style: italic;
-  font-size: small;
-  background-color: lightblue;
+  color: #444;
+  font-size: 1em;
 }
 
-.fc-event.holiday, .fc-event.holiday * {
-  font-style: italic;
-  font-size: small;
-  background-color: rgba(220, 220, 220, 0.5);
-  color: rgba(110, 110, 110, 0.5);
+.fc .flagday a {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
 }
 
-.fc-event.nameday, .fc-event.nameday * {
-  background-color: transparent;
-  border: none;
-  color: rgb(160, 104, 0);
-  font-size: 13px;
+.modal-body a {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.nameday {
-  font-weight: bold;
-  font-size: larger;
-  color: #fff;
-  text-shadow: 1px 1px 2px #000;
+.fc .nameday a {
+  font-size: 0.8em;
+  color: rgba(225, 0, 255, 0.342);
+  text-shadow: 1px 1px 1px rgb(89, 0, 100);
 }
 
 .nameday-header {
@@ -228,7 +270,7 @@ thead .fc-scroller {
   margin-bottom: 4px;
 }
 
-.ownnameday {
+.ownnameday.animated {
   display: inline-block;
   font-weight: bold;
   color: #ff8c00;
@@ -250,7 +292,7 @@ thead .fc-scroller {
   100% { background-color: #ff6b6b; }
 }
 
-.nameday-container {
+.nameday-container.animated {
   border: 1px solid black;
   border-radius: 10px;
   padding: 5px 10px;

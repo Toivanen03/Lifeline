@@ -3,27 +3,41 @@ import { AuthContext } from "./AuthContext"
 
 const SettingsContext = createContext()
 
+const defaultSettings = {
+  showRightPanel: true,
+  showWeather: false,
+  weatherIcon: false
+}
+
 export const SettingsProvider = ({ children }) => {
   const { currentUser } = useContext(AuthContext)
-  const [mainSettings, setSettings] = useState({
-    showRightPanel: true,
-    showWeather: false,
-    weatherIcon: false
-  })
+  const [mainSettings, setMainSettings] = useState(defaultSettings)
+  const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
-    if (!currentUser) return
-    const saved = localStorage.getItem(`${currentUser.username}.settings`)
-    if (saved) {
-      setSettings(JSON.parse(saved))
+    if (!currentUser) {
+      setMainSettings(defaultSettings)
+      setInitialized(true)
+      return
     }
+
+    const saved = localStorage.getItem(`${currentUser.username}.mainSettings`)
+    if (saved) {
+      setMainSettings(JSON.parse(saved))
+    } else {
+      setMainSettings(defaultSettings)
+    }
+    setInitialized(true)
   }, [currentUser])
 
   const updateMainSettings = (newSettings) => {
-    if (!currentUser) return
-    setSettings(newSettings)
-    localStorage.setItem(`${currentUser.username}.settings`, JSON.stringify(newSettings))
+    setMainSettings(newSettings)
+    if (currentUser) {
+      localStorage.setItem(`${currentUser.username}.mainSettings`, JSON.stringify(newSettings))
+    }
   }
+
+  if (!initialized) return null
 
   return (
     <SettingsContext.Provider value={{ mainSettings, updateMainSettings }}>

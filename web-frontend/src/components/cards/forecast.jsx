@@ -3,24 +3,9 @@ import { GET_FORECAST } from "../../schema/queries"
 import { useLocation } from "react-router-dom"
 import { motion } from "framer-motion"
 import { Carousel } from "react-bootstrap"
-import { tempToColor } from "../widgets/weather"
+import { tempToColor, getBackgroundColor } from "../widgets/utils"
 
 const weekdays = ["Sunnuntai", "Maanantai", "Tiistai", "Keskiviikko", "Torstai", "Perjantai", "Lauantai"]
-
-export const getBackgroundColor = (iconCode) => {
-  switch(iconCode) {
-    case "01d": case "01n": return "#87CEEB"
-    case "02d": case "02n": return "#ADD8E6"
-    case "03d": case "03n": return "#B0C4DE"
-    case "04d": case "04n": return "#778899"
-    case "09d": case "09n": return "#00BFFF"
-    case "10d": case "10n": return "#1E90FF"
-    case "11d": case "11n": return "#FFD700"
-    case "13d": case "13n": return "#FFFFFF"
-    case "50d": case "50n": return "#D3D3D3"
-    default: return "#87CEEB"
-  }
-}
 
 const Forecast = () => {
     const { state } = useLocation()

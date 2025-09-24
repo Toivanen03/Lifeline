@@ -11,13 +11,14 @@ import { useQuery } from '@apollo/client/react'
 import { ME } from './schema/queries'
 import { Routes, Route, useNavigate } from 'react-router-dom'
 import { AuthContext } from './contexts/AuthContext'
-import { useContext, useEffect } from 'react'
+import { useContext, useEffect, useRef } from 'react'
 import { AnimatePresence } from "framer-motion"
 import Cards from './components/cards'
 import { ClockSettingsProvider } from './contexts/ClockContext'
 import { SettingsProvider } from './contexts/SettingsContext'
 import { ElectricitySettingsProvider } from './contexts/ElectricityContext'
 import { CalendarSettingsProvider } from './contexts/CalendarContext'
+import { CalendarDayProvider } from './contexts/CalendarDayContext'
 import { USERS } from './schema/queries'
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
   const { isLoggedIn, isLoading, currentUser } = useContext(AuthContext)
   const navigate = useNavigate()
   const family = users?.users || []
+  const shownMessages = useRef(new Set())
 
   useEffect(() => {
     if (!isLoading && !isLoggedIn) {
@@ -42,12 +44,20 @@ function App() {
   if (isLoading && !currentUser) return <div>Ladataan...</div>
 
   const notify = (message, type) => {
-    if (type === 'success') {
-      toast.success(message)
-    } else if (type === 'info') {
-      toast.info(message)
+    if (shownMessages.current.has(message)) return
+
+    shownMessages.current.add(message)
+
+    const toastOptions = {
+      onClose: () => {
+        shownMessages.current.delete(message)
+      },
+      autoClose: 3000
     }
-    else toast.error(message)
+
+    if (type === 'success') toast.success(message, toastOptions)
+    else if (type === 'info') toast.info(message, toastOptions)
+    else toast.error(message, toastOptions)
   }
 
   return (
@@ -56,7 +66,6 @@ function App() {
         <Header notify={notify} firstname={firstname} familyName={familyName} navigate={navigate} />
         <ToastContainer
           position="top-right"
-          autoClose={3000}
           toastStyle={{ width: "400px", textAlign: "left" }}
         />
         <AnimatePresence>
@@ -64,15 +73,17 @@ function App() {
             <CalendarSettingsProvider>
               <ClockSettingsProvider>
                 <ElectricitySettingsProvider>
-                  <Routes>
-                    <Route path="/login" element={<Login notify={notify} firstname={firstname} />} />
-                    <Route path="/forgot" element={<Forgot notify={notify} />} />
-                    <Route path="/reset-password" element={<ResetPassword notify={notify} />} />
-                    <Route path="/emailverify" element={<EmailVerify notify={notify} />} />
-                      <Route path="/" element={<Home familyName={familyName} notify={notify} family={family} />}>
-                      {Cards({notify, family, firstname})}
-                    </Route>
-                  </Routes>
+                  <CalendarDayProvider>
+                    <Routes>
+                      <Route path="/login" element={<Login notify={notify} firstname={firstname} />} />
+                      <Route path="/forgot" element={<Forgot notify={notify} />} />
+                      <Route path="/reset-password" element={<ResetPassword notify={notify} />} />
+                      <Route path="/emailverify" element={<EmailVerify notify={notify} />} />
+                        <Route path="/" element={<Home familyName={familyName} notify={notify} family={family} />}>
+                        {Cards({notify, family, firstname})}
+                      </Route>
+                    </Routes>
+                  </CalendarDayProvider>
                 </ElectricitySettingsProvider>
               </ClockSettingsProvider>
             </CalendarSettingsProvider>
