@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema({
   token: String,
   emailVerified: { type: Boolean, default: false },
   emailVerificationToken: String,
+  emailVerificationTokenExpiry: { type: Date },
   familyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Family' },
 
   notificationPermissions: {
@@ -19,6 +20,6 @@ const userSchema = new mongoose.Schema({
     todo: { type: Boolean, default: false },
     chores: { type: Boolean, default: false }
   }
-})
+}, { timestamps: true })
 
 export default mongoose.model('User', userSchema)

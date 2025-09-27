@@ -5,6 +5,7 @@ import { useCalendarSettings } from "../../contexts/CalendarContext"
 import { useSettings } from "../../contexts/SettingsContext"
 import { useClockSettings } from "../../contexts/ClockContext"
 import { useElectricitySettings } from "../../contexts/ElectricityContext"
+import UserSettings from "../settings/UserSettings"
 import { motion } from "framer-motion"
 import { useEffect } from "react"
 
@@ -110,6 +111,9 @@ const Settings = ({ family }) => {
 {/* KALENTERIN ASETUKSET */}
                     <h2 className="mt-3 mb-3 align-self-start">Kalenterin asetukset</h2>
                     <CalendarSettings />
+{/* MUUT ASETUKSET */}
+                    <h2 className="mt-3 mb-3 align-self-start">Käyttäjätilin asetukset</h2>
+                    <UserSettings />
                 </div>
             </div>
         </div>

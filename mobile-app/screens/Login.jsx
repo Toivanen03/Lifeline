@@ -33,11 +33,10 @@ export default function Login({ route, notify }) {
         notify('Tervetuloa!', 'success')
         navigation.replace('Home')
       } else {
-        notify('PALVELINVIRHE: No token received', 'error')
+        notify('Käyttäjätunnusta ei ole olemassa!', 'error')
         return
       }
     } catch (error) {
-      console.log(error)
       notify(`VIRHE KIRJAUTUMISESSA: ${error}`, 'error')
       return
     }

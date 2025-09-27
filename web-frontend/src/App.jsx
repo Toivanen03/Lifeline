@@ -5,11 +5,13 @@ import Login from './pages/login'
 import Forgot from './pages/forgot'
 import EmailVerify from './pages/emailverify'
 import ResetPassword from './pages/ResetPassword'
+import Register from './pages/register'
+import ConfirmEmail from './pages/ConfirmEmail'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { useQuery } from '@apollo/client/react'
 import { ME } from './schema/queries'
-import { Routes, Route, useNavigate } from 'react-router-dom'
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { AuthContext } from './contexts/AuthContext'
 import { useContext, useEffect, useRef } from 'react'
 import { AnimatePresence } from "framer-motion"
@@ -28,15 +30,16 @@ function App() {
   const navigate = useNavigate()
   const family = users?.users || []
   const shownMessages = useRef(new Set())
+  const location = useLocation()
 
   useEffect(() => {
-    if (!isLoading && !isLoggedIn) {
+    if (!isLoading && !isLoggedIn && !['/register', '/forgot', '/reset-password'].some(path => location.pathname.includes(path))) {
       navigate("/login")
     }
     if (isLoggedIn) {
       refetch()
     }
-  }, [isLoggedIn, isLoading, navigate, refetch])
+  }, [isLoggedIn, isLoading, navigate, refetch, location.pathname])
 
   const familyName = isLoggedIn ? data?.me?.name.split(" ")[1] : null
   const firstname = isLoggedIn ? data?.me?.name.split(" ")[0] : null
@@ -75,10 +78,12 @@ function App() {
                 <ElectricitySettingsProvider>
                   <CalendarDayProvider>
                     <Routes>
+                      <Route path="/register" element={<Register notify={notify} />} />
                       <Route path="/login" element={<Login notify={notify} firstname={firstname} />} />
                       <Route path="/forgot" element={<Forgot notify={notify} />} />
                       <Route path="/reset-password" element={<ResetPassword notify={notify} />} />
                       <Route path="/emailverify" element={<EmailVerify notify={notify} />} />
+                      <Route path="/confirm-email" element={<ConfirmEmail notify={notify} />} />
                         <Route path="/" element={<Home familyName={familyName} notify={notify} family={family} />}>
                         {Cards({notify, family, firstname})}
                       </Route>

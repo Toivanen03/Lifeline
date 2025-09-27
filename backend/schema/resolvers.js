@@ -3,12 +3,14 @@ import mongoose from 'mongoose'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import User from '../models/User.js'
-import GlobalCalendarEntry from '../models/GlobalCalendarEntries.js'
+import GlobalNamedayEntries from '../models/GlobalNamedayEntries.js'
+import GlobalFlagdayEntries from '../models/GlobalFlagdayEntries.js'
 import NotificationSettings from '../models/Notification.js'
 import { createUserSchema } from './userValidation.js'
 import { GraphQLError } from 'graphql'
 import { z } from 'zod'
 import fetch from 'node-fetch'
+import MailSender from '../utils/mailer.js'
 
 const LATEST_PRICES_ENDPOINT = 'https://api.porssisahko.net/v1/latest-prices.json'
 
@@ -34,25 +36,28 @@ const requireParent = (user) => {
   }
 }
 
+const expiry = 15 * 60 * 1000
+const expiryMinutes = expiry / 1000
+
 const resolvers = {
 
   Query: {
 
     nameDays: async () => {
-      const doc = await GlobalCalendarEntry.findOne({ category: "nameDays" })
+      const doc = await GlobalNamedayEntries.findOne({ category: "nameDays" })
       return doc ? doc.entries : []
     },
     nameDayByDate: async (_, { date }) => {
-      const doc = await GlobalCalendarEntry.findOne({ category: "nameDays" })
+      const doc = await GlobalNamedayEntries.findOne({ category: "nameDays" })
       return doc ? doc.entries.filter(entry => entry.date === date) : []
     },
 
     flagDays: async () => {
-      const doc = await GlobalCalendarEntry.findOne({ category: "solidFlagDays" })
+      const doc = await GlobalFlagdayEntries.findOne({ category: "solidFlagDays" })
       return doc ? doc.entries : []
     },
     flagDayByDate: async (_, { date }) => {
-      const doc = await GlobalCalendarEntry.findOne({ category: "solidFlagDays" })
+      const doc = await GlobalFlagdayEntries.findOne({ category: "solidFlagDays" })
       return doc ? doc.entries.filter(entry => entry.date === date) : []
     },
 
@@ -182,7 +187,6 @@ const resolvers = {
       }
 
       const passwordHash = await bcrypt.hash(password, 10)
-      const emailVerificationToken = crypto.randomBytes(32).toString('hex')
 
       let finalFamilyId
       if (parent) {
@@ -199,17 +203,29 @@ const resolvers = {
         parent,
         familyId: finalFamilyId,
         emailVerified: false,
-        emailVerificationToken
+        emailVerificationToken: null,
+        emailVerificationTokenExpiry: null
       }).save()
+
+      const emailVerificationToken = jwt.sign(
+        { id: user._id },
+        process.env.JWT_SECRET,
+        { expiresIn: expiryMinutes }
+      )
+
+      user.emailVerificationToken = emailVerificationToken
+      user.emailVerificationTokenExpiry = new Date(Date.now() + expiry)
+      await user.save()
+
+      await MailSender(user, emailVerificationToken, 'confirm-email')
 
       return {
         ...user.toObject(),
         id: user._id.toString(),
-        token: jwt.sign({
-          username: user.username,
-          id: user._id,
-          familyId: user.familyId
-        }, process.env.JWT_SECRET)
+        token: jwt.sign(
+          { username: user.username, id: user._id, familyId: user.familyId },
+          process.env.JWT_SECRET
+        )
       }
     },
 
@@ -253,27 +269,20 @@ const resolvers = {
       }
 
       const token = crypto.randomBytes(32).toString('hex')
-      const expiry = new Date(Date.now() + 15 * 60 * 1000)
 
       user.resetToken = token
-      user.resetTokenExpiry = expiry
+      user.resetTokenExpiry = new Date(Date.now() + expiry)
       await user.save()
-
-      // TÄSTÄ TOKENIN VÄLITYS MAILERIIN
-      console.log(`https://localhost:5173/reset-password?token=${token}`)
 
       return true
     },
 
-    updatePassword: async (_root, { currentPassword, newPassword, token }, context) => {
+    updatePassword: async (_root, { newPassword, token }, context) => {
       let user
 
       if (context.currentUser) {
         user = await User.findById(context.currentUser.id)
         if (!user) throw new Error("Käyttäjää ei löytynyt")
-
-        const passwordCorrect = await bcrypt.compare(currentPassword, user.passwordHash)
-        if (!passwordCorrect) throw new Error("Väärä nykyinen salasana")
 
       } else if (token) {
         try {
@@ -301,9 +310,17 @@ const resolvers = {
     },
 
     verifyEmailOrInvite: async (_, { token, familyId }) => {
+      if (!token) throw new GraphQLError("Token puuttuu")
+
       const user = await User.findOne({ emailVerificationToken: token })
-      if (!user) throw new Error("Virheellinen tai vanhentunut token")
-      if (!token && !familyId) throw new Error("Virheellinen linkki")
+
+      if (!user) {
+        throw new GraphQLError("Käyttäjää ei löytynyt tai token vanhentunut")
+      }
+
+      if (!user.emailVerificationToken || user.emailVerificationTokenExpiry < new Date()) {
+        throw new GraphQLError("Token on vanhentunut")
+      }
 
       if (familyId) {
         user.familyId = familyId
@@ -313,7 +330,25 @@ const resolvers = {
       user.emailVerificationToken = null
       user.emailVerified = true
       await user.save()
+
       return user
+    },
+
+    resendEmailVerificationToken: async (_, { email }) => {
+      const user = await User.findOne({ username: email.toLowerCase().trim() })
+      if (!user) throw new GraphQLError("Käyttäjää ei löytynyt")
+
+      if (user.emailVerified) {
+        throw new GraphQLError("Sähköposti on jo vahvistettu")
+      }
+
+      const newToken = crypto.randomBytes(32).toString('hex')
+      user.emailVerificationToken = newToken
+      user.emailVerificationTokenExpiry = new Date(Date.now() + expiry)
+      await user.save()
+
+      await MailSender(user, newToken, 'confirm-email')
+      return true
     },
 
     setChildNotificationPermission: async (_root, { userId, type, canManage }, context) => {

@@ -13,3 +13,13 @@ export const validateEmail = z.object({
     message: '\n- Virheellinen sähköpostiosoite'
   })
 })
+
+export const validateFullName = z.object({
+  fullName: z.string()
+    .refine(val => val.trim().split(/\s+/).length === 2, '\n- Nimen tulee sisältää tasan yksi välilyönti etu- ja sukunimen välillä')
+    .refine(val => {
+      const [first, last] = val.trim().split(' ')
+      const nameRegex = /^\p{L}{2,}$/u
+      return nameRegex.test(first) && nameRegex.test(last)
+    }, '\n- Etu- ja sukunimen on oltava vähintään 2 kirjainta ja sisältää vain kirjaimia')
+})

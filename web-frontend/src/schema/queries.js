@@ -21,6 +21,12 @@ export const GET_FLAGDAYS = gql`
   }
 `
 
+export const RESEND_EMAIL_VERIFICATION_TOKEN = gql`
+  mutation ResendEmailVerificationToken($email: String!) {
+    resendEmailVerificationToken(email: $email)
+  }
+`
+
 export const ADD_USER = gql`
   mutation CreateUser(
     $username: String!, 
@@ -84,6 +90,7 @@ export const USER_BY_EMAIL = gql`
       id
       username
       emailVerified
+      emailVerificationTokenExpiry
     }
   }
 `
@@ -188,8 +195,8 @@ export const DELETE_USER = gql`
 `
 
 export const UPDATE_PASSWORD = gql`
-  mutation UpdatePassword($currentPassword: String!, $newPassword: String!, $token: String) {
-    updatePassword(currentPassword: $currentPassword, newPassword: $newPassword, token: $token) {
+  mutation UpdatePassword($newPassword: String, $token: String) {
+    updatePassword(newPassword: $newPassword, token: $token) {
       id
     }
   }

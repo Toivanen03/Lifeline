@@ -27,6 +27,7 @@ const typeDefs = gql`
     token: String
     emailVerified: Boolean
     emailVerificationToken: String
+    emailVerificationTokenExpiry: String
     familyId: ID
     notificationPermissions: NotificationPermissions
   }
@@ -108,11 +109,12 @@ const typeDefs = gql`
     createUser(username: String!, password: String!, name: String!, parent: Boolean!, familyId: ID): User
     deleteUser(id: ID!): User
     updateUser(id: ID!, parent: Boolean!): User
-    updatePassword(currentPassword: String!, newPassword: String!, token: String): User
+    updatePassword(newPassword: String, token: String): User
     verifyEmailOrInvite(token: String, familyId: String): User
     requestPasswordReset(email: String!): Boolean
     updateNotificationSettings(userId: ID!, type: String!, enabled: Boolean!): NotificationSettings
     setChildNotificationPermission(userId: ID!, type: String!, canManage: Boolean!): User
+    resendEmailVerificationToken(email: String!): Boolean
   }
 `
 

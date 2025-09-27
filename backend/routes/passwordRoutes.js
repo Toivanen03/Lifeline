@@ -5,6 +5,9 @@ import MailSender from '../utils/mailer.js'
 
 const router = express.Router()
 
+const expiry = 15 * 60 * 1000
+const expiryMinutes = expiry / 1000
+
 router.post('/forgot-password', async (req, res) => {
   const { username } = req.body
 
@@ -19,14 +22,14 @@ router.post('/forgot-password', async (req, res) => {
     const resetToken = jwt.sign(
       { id: user._id },
       process.env.JWT_SECRET,
-      { expiresIn: '15m' }
+      { expiresIn: expiryMinutes }
     )
 
     user.resetToken = resetToken
-    user.resetTokenExpiry = new Date(Date.now() + 15 * 60000)
+    user.resetTokenExpiry = new Date(Date.now() + expiry)
     await user.save()
 
-    await MailSender(user, resetToken)
+    await MailSender(user, resetToken, 'reset-password')
 
     res.status(200).json({
       message: 'Lähetämme linkin salasanan vaihtamiseksi sähköpostiisi, mikäli käyttäjätunnus löytyy annetuilla tiedoilla.'
@@ -40,7 +43,7 @@ router.post('/forgot-password', async (req, res) => {
 
 router.post('/reset-password', async (req, res) => {
   const { token, password } = req.body
-
+console.log("back kutsuttu")
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
     const user = await User.findById(decoded.id)
@@ -66,4 +69,4 @@ router.post('/reset-password', async (req, res) => {
 })
 
 
-export { router as passwordResetRoutes }
+export { router as passwordRoutes }
