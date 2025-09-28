@@ -7,7 +7,7 @@ const NotificationSettings = ({
   updateNotificationSettings,
   setChildPermission,
   currentUser,
-  family
+  familyMembers
   }) => {
     const { data: settingsData, refetch: refetchSettings } = useQuery(NOTIFICATION_SETTINGS, {
       skip: !currentUser
@@ -15,7 +15,7 @@ const NotificationSettings = ({
 
   const settings = settingsData?.notificationSettings
 
-  const usersArray = family?.map((u) => ({
+  const usersArray = familyMembers?.map((u) => ({
     id: u.id,
     name: u.name,
     enabled: settings?.[type]?.find((e) => e.userId === u.id)?.enabled ?? false,

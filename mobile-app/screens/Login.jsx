@@ -9,7 +9,7 @@ import bkg from '../assets/bkgnd_vertical.png'
 import { useNavigation } from '@react-navigation/native'
 
 export default function Login({ route, notify }) {
-  const [signIn, { loading, data, error }] = useMutation(LOGIN)
+  const [signIn] = useMutation(LOGIN)
   const { control, handleSubmit, reset } = useForm()
   const [stayLoggedIn, setStayLoggedIn] = useState(false)
   const { login } = useContext(AuthContext)

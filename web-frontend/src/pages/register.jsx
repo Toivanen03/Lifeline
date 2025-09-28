@@ -104,26 +104,23 @@ const Register = ({ notify }) => {
                         />
                     </div>
 
-                    <div className="row w-100 p-1">
-                        <div className="mb-3 col-4">
-                            <input
-                                id="firstname"
-                                placeholder="Etunimi"
-                                {...register("firstname")}
-                                className="form-control rounded"
-                                required
-                            />
-                        </div>
-
-                        <div className="mb-3 col-8">
-                            <input
-                                id="lastname"
-                                placeholder="Sukunimi"
-                                {...register("lastname")}
-                                className="form-control rounded"
-                                required
-                            />
-                        </div>
+                    <div className="d-flex mb-3" style={{ width: 300, gap: 8 }}>
+                        <input
+                            id="firstname"
+                            placeholder="Etunimi"
+                            {...register("firstname")}
+                            className="form-control rounded"
+                            required
+                            style={{ flex: 1 }}
+                        />
+                        <input
+                            id="lastname"
+                            placeholder="Sukunimi"
+                            {...register("lastname")}
+                            className="form-control rounded"
+                            required
+                            style={{ flex: 1 }}
+                        />
                     </div>
 
                     <div className="mb-3" style={{ width: 300 }}>

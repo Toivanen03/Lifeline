@@ -9,8 +9,8 @@ import Register from './pages/register'
 import ConfirmEmail from './pages/ConfirmEmail'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-import { useQuery } from '@apollo/client/react'
-import { ME } from './schema/queries'
+import { useQuery, useLazyQuery } from '@apollo/client/react'
+import { FAMILY, ME } from './schema/queries'
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { AuthContext } from './contexts/AuthContext'
 import { useContext, useEffect, useRef } from 'react'
@@ -21,30 +21,31 @@ import { SettingsProvider } from './contexts/SettingsContext'
 import { ElectricitySettingsProvider } from './contexts/ElectricityContext'
 import { CalendarSettingsProvider } from './contexts/CalendarContext'
 import { CalendarDayProvider } from './contexts/CalendarDayContext'
-import { USERS } from './schema/queries'
 
 function App() {
-  const { data, refetch } = useQuery(ME)
-  const { data: users } = useQuery(USERS) 
-  const { isLoggedIn, isLoading, currentUser } = useContext(AuthContext)
+  const { data: meData, refetch } = useQuery(ME, { fetchPolicy: "network-only" })
+  const [getFamily, { data: familyData, refetch: refetchFamily }] = useLazyQuery(FAMILY, { fetchPolicy: "network-only" });
+  const { isLoggedIn, isLoading } = useContext(AuthContext)
   const navigate = useNavigate()
-  const family = users?.users || []
   const shownMessages = useRef(new Set())
   const location = useLocation()
 
+  const isDataLoaded = isLoggedIn ? (meData?.me && familyData?.family) : true
+
   useEffect(() => {
-    if (!isLoading && !isLoggedIn && !['/register', '/forgot', '/reset-password'].some(path => location.pathname.includes(path))) {
+    if (isLoggedIn) {
+      getFamily()
+      refetch()
+    } else if (!isLoading && !['/register', '/forgot', '/reset-password'].some(path => location.pathname.includes(path))) {
       navigate("/login")
     }
-    if (isLoggedIn) {
-      refetch()
-    }
-  }, [isLoggedIn, isLoading, navigate, refetch, location.pathname])
+  }, [isLoggedIn, isLoading, navigate, location.pathname, getFamily, refetch])
 
-  const familyName = isLoggedIn ? data?.me?.name.split(" ")[1] : null
-  const firstname = isLoggedIn ? data?.me?.name.split(" ")[0] : null
+  const firstname = isLoggedIn ? meData?.me?.name.split(" ")[0] : null
+  const family = isLoggedIn ? familyData?.family?.name : ""
+  const familyMembers = isLoggedIn ? familyData?.family?.members : []
 
-  if (isLoading && !currentUser) return <div>Ladataan...</div>
+  if (isLoading || !isDataLoaded) return <div>Ladataan...</div>
 
   const notify = (message, type) => {
     if (shownMessages.current.has(message)) return
@@ -66,7 +67,7 @@ function App() {
   return (
     <>
       <div className='d-flex flex-column vh-100 overflow-hidden'>
-        <Header notify={notify} firstname={firstname} familyName={familyName} navigate={navigate} />
+        <Header notify={notify} firstname={firstname} family={family} navigate={navigate} />
         <ToastContainer
           position="top-right"
           toastStyle={{ width: "400px", textAlign: "left" }}
@@ -84,8 +85,8 @@ function App() {
                       <Route path="/reset-password" element={<ResetPassword notify={notify} />} />
                       <Route path="/emailverify" element={<EmailVerify notify={notify} />} />
                       <Route path="/confirm-email" element={<ConfirmEmail notify={notify} />} />
-                        <Route path="/" element={<Home familyName={familyName} notify={notify} family={family} />}>
-                        {Cards({notify, family, firstname})}
+                        <Route path="/" element={<Home familyMembers={familyMembers} notify={notify} />}>
+                        {Cards({notify, familyMembers, firstname})}
                       </Route>
                     </Routes>
                   </CalendarDayProvider>

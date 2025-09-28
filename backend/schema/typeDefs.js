@@ -28,7 +28,7 @@ const typeDefs = gql`
     emailVerified: Boolean
     emailVerificationToken: String
     emailVerificationTokenExpiry: String
-    familyId: ID
+    familyId: ID!
     notificationPermissions: NotificationPermissions
   }
 
@@ -72,6 +72,7 @@ const typeDefs = gql`
 
   type Query {
     me: User
+    family: Family
     users: [User]
     user(id: ID!): User
     userByEmail(email: String!): User
@@ -85,6 +86,13 @@ const typeDefs = gql`
     nameDayByDate(date: String!): [NameDay]!
     flagDays: [FlagDay!]!
     flagDayByDate(date: String!): [FlagDay!]!
+  }
+
+  type Family {
+    familyId: ID!
+    name: String!
+    owner: User!
+    members: [User!]!
   }
 
   type Token {
@@ -108,6 +116,7 @@ const typeDefs = gql`
     login(username: String!, password: String!): Token
     createUser(username: String!, password: String!, name: String!, parent: Boolean!, familyId: ID): User
     deleteUser(id: ID!): User
+    deleteFamily(familyId: ID!): Boolean!
     updateUser(id: ID!, parent: Boolean!): User
     updatePassword(newPassword: String, token: String): User
     verifyEmailOrInvite(token: String, familyId: String): User

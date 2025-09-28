@@ -29,7 +29,7 @@ const saveCache = (data) => {
   )
 }
 
-export const ElectricityWidget = ({ notify, family }) => {
+export const ElectricityWidget = ({ notify, familyMembers }) => {
   const { data } = useQuery(NOTIFICATION_SETTINGS)
   const { electricitySettings } = useElectricitySettings()
   const prevPriceRef = useRef(null)
@@ -98,7 +98,7 @@ export const ElectricityWidget = ({ notify, family }) => {
       data.notificationSettings.electricity.map(e => [e.userId, e.enabled])
     )
 
-    family.forEach(user => {
+    familyMembers.forEach(user => {
       if (!electricitySubscriptions[user.id]) return
       if (prevPriceRef.current === currentPrice) return
 
@@ -132,7 +132,7 @@ export const ElectricityWidget = ({ notify, family }) => {
         )
       }
     })
-  }, [future, data, electricitySettings, notify, tick, family])
+  }, [future, data, electricitySettings, notify, tick, familyMembers])
 
   useEffect(() => {
     const updateAtFullHour = () => setTick(t => t + 1)

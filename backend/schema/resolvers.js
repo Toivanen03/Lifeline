@@ -6,6 +6,7 @@ import User from '../models/User.js'
 import GlobalNamedayEntries from '../models/GlobalNamedayEntries.js'
 import GlobalFlagdayEntries from '../models/GlobalFlagdayEntries.js'
 import NotificationSettings from '../models/Notification.js'
+import Family from '../models/Family.js'
 import { createUserSchema } from './userValidation.js'
 import { GraphQLError } from 'graphql'
 import { z } from 'zod'
@@ -34,6 +35,25 @@ const requireParent = (user) => {
   if (!user.parent) {
     throw new Error("Ei valtuuksia!")
   }
+}
+
+const attachNotificationSettings = (users, settings) => {
+  return users.map(user => {
+    const perms = settings
+      ? {
+          electricity: settings.electricity.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false,
+          calendar: settings.calendar.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false,
+          shopping: settings.shopping.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false,
+          todo: settings.todo.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false,
+          chores: settings.chores.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false
+        }
+      : {}
+
+    return {
+      ...user.toObject(),
+      notificationPermissions: perms
+    }
+  })
 }
 
 const expiry = 15 * 60 * 1000
@@ -77,21 +97,39 @@ const resolvers = {
       return context.currentUser || null
     },
 
-    users: async (_root, _args, context) => {
-      if (!context.currentUser) {
-        throw new Error("Ei valtuuksia!")
-      }
-      requireParent(context.currentUser)
-      return await User.find({ familyId: context.currentUser.familyId })
-    },
+    family: async (_root, _args, context) => {
+      const user = context.currentUser
+      if (!user) throw new Error("Ei kirjautunutta käyttäjää")
 
-    user: async (_root, { id }, context) => {
-      const user = await User.findById(id)
-      if (!user) return null
-      if (context.currentUser && user.familyId.toString() !== context.currentUser.familyId.toString()) {
-        throw new Error("Ei valtuuksia nähdä tätä käyttäjää")
+      const family = await Family.findById(user.familyId).populate('owner')
+      if (!family) throw new Error("Perhettä ei löytynyt")
+
+      const members = await User.find({ familyId: family._id })
+      const settings = await NotificationSettings.findOne({ familyId: family._id })
+      const membersWithNotifications = attachNotificationSettings(members, settings)
+
+      return {
+        familyId: family._id.toString(),
+        name: family.name,
+        owner: {
+          id: family.owner._id.toString(),
+          username: family.owner.username,
+          name: family.owner.name,
+          parent: family.owner.parent,
+          emailVerified: family.owner.emailVerified,
+          familyId: family.owner.familyId?.toString(),
+          notificationPermissions: family.owner.notificationPermissions
+        },
+        members: membersWithNotifications.map(m => ({
+          id: m._id.toString(),
+          username: m.username,
+          name: m.name,
+          parent: m.parent,
+          emailVerified: m.emailVerified,
+          familyId: m.familyId?.toString(),
+          notificationPermissions: m.notificationPermissions
+        }))
       }
-      return user
     },
 
     userByEmail: async (_root, { email }, context) => {
@@ -188,44 +226,79 @@ const resolvers = {
 
       const passwordHash = await bcrypt.hash(password, 10)
 
-      let finalFamilyId
       if (parent) {
-        finalFamilyId = new mongoose.Types.ObjectId()
+        const user = await new User({
+          username: username.toLowerCase().trim(),
+          passwordHash,
+          name,
+          parent,
+          emailVerified: false
+        }).save()
+
+        const family = await new Family({
+          name: `${name.split(' ')[1]}`,
+          owner: user._id
+        }).save()
+
+        user.familyId = family._id
+        await user.save()
+
+        const emailVerificationToken = jwt.sign(
+          { id: user._id },
+          process.env.JWT_SECRET,
+          { expiresIn: expiryMinutes }
+        )
+
+        user.emailVerificationToken = emailVerificationToken
+        user.emailVerificationTokenExpiry = new Date(Date.now() + expiry)
+        await user.save()
+
+        await MailSender(user, emailVerificationToken, 'confirm-email')
+
+        return {
+          ...user.toObject(),
+          id: user._id.toString(),
+          token: jwt.sign(
+            { username: user.username, id: user._id, familyId: user.familyId },
+            process.env.JWT_SECRET
+          )
+        }
+
       } else {
         if (!familyId) throw new Error("familyId puuttuu lapselta")
-        finalFamilyId = new mongoose.Types.ObjectId(String(familyId))
-      }
 
-      const user = await new User({
-        username: username.toLowerCase().trim(),
-        passwordHash,
-        name,
-        parent,
-        familyId: finalFamilyId,
-        emailVerified: false,
-        emailVerificationToken: null,
-        emailVerificationTokenExpiry: null
-      }).save()
+        const family = await Family.findById(familyId)
+        if (!family) throw new Error("Perhettä ei löytynyt")
 
-      const emailVerificationToken = jwt.sign(
-        { id: user._id },
-        process.env.JWT_SECRET,
-        { expiresIn: expiryMinutes }
-      )
+        const user = await new User({
+          username: username.toLowerCase().trim(),
+          passwordHash,
+          name,
+          parent,
+          familyId,
+          emailVerified: false
+        }).save()
 
-      user.emailVerificationToken = emailVerificationToken
-      user.emailVerificationTokenExpiry = new Date(Date.now() + expiry)
-      await user.save()
-
-      await MailSender(user, emailVerificationToken, 'confirm-email')
-
-      return {
-        ...user.toObject(),
-        id: user._id.toString(),
-        token: jwt.sign(
-          { username: user.username, id: user._id, familyId: user.familyId },
-          process.env.JWT_SECRET
+        const emailVerificationToken = jwt.sign(
+          { id: user._id },
+          process.env.JWT_SECRET,
+          { expiresIn: expiryMinutes }
         )
+
+        user.emailVerificationToken = emailVerificationToken
+        user.emailVerificationTokenExpiry = new Date(Date.now() + expiry)
+        await user.save()
+
+        await MailSender(user, emailVerificationToken, 'confirm-email')
+
+        return {
+          ...user.toObject(),
+          id: user._id.toString(),
+          token: jwt.sign(
+            { username: user.username, id: user._id, familyId: user.familyId },
+            process.env.JWT_SECRET
+          )
+        }
       }
     },
 
@@ -382,6 +455,10 @@ const resolvers = {
       const currentUser = context.currentUser
       if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
 
+      if (!currentUser.parent && currentUser._id.toString() !== userId) {
+        throw new Error("Ei valtuuksia muuttaa muiden asetuksia")
+      }
+
       let settings = await NotificationSettings.findOne({ familyId: currentUser.familyId })
       if (!settings) {
         settings = new NotificationSettings({
@@ -404,6 +481,24 @@ const resolvers = {
 
       await settings.save()
       return settings
+    },
+
+    deleteFamily: async (_root, { familyId }, context) => {
+      if (!context.currentUser || !context.currentUser.parent) {
+        throw new Error("Ei oikeuksia")
+      }
+
+      const family = await Family.findById(familyId)
+      if (!family) throw new Error("Perhettä ei löytynyt")
+
+      if (family.owner.toString() !== context.currentUser.id) {
+        throw new Error("Et voi poistaa tätä perhettä")
+      }
+
+      await User.deleteMany({ familyId })
+      await Family.findByIdAndDelete(familyId)
+
+      return true
     }
   }
 }

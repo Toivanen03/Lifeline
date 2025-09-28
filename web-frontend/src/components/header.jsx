@@ -1,7 +1,7 @@
 import { AuthContext } from "../contexts/AuthContext"
 import { useContext } from 'react'
 
-const Header = ({ notify, familyName, firstname, navigate }) => {
+const Header = ({ notify, family, firstname, navigate }) => {
     const { logout } = useContext(AuthContext)
 
     const logOut = () => {
@@ -13,14 +13,14 @@ const Header = ({ notify, familyName, firstname, navigate }) => {
         <header className="container-fluid bg-dark text-white p-2">
             <div className="row align-items-center">
                 <div className="col-3">
-                    {familyName && <><h4>Perhe {familyName}</h4> <small>{firstname} kirjautuneena</small></>}
+                    {family && <><h4>Perhe {family}</h4> <small>{firstname} kirjautuneena</small></>}
                 </div>
                 <div className="col-5 text-center">
                     <h4>Lifeline ©</h4>
                     <h5>Web Control Panel</h5>
                 </div>
                 <div className="col-3 text-end">
-                {familyName && (
+                {family && (
                     <button
                         className="btn btn-outline-light btn-sm"
                         onClick={logOut}>

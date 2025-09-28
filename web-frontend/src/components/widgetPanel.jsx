@@ -4,10 +4,10 @@ import { ClockWidget } from "./widgets/clock"
 import { ElectricityWidget } from "./widgets/electricity"
 import { CalendarWidget } from "./widgets/calendar"
 
-const WidgetPanel = ({ familyName, notify, family }) => {
+const WidgetPanel = ({ notify, familyMembers }) => {
   const { mainSettings } = useSettings()
 
-  if (!familyName || !mainSettings.showRightPanel) {
+  if (!familyMembers || !mainSettings.showRightPanel) {
     return null
   }
 
@@ -27,7 +27,7 @@ const WidgetPanel = ({ familyName, notify, family }) => {
   )}
 
   <div className="p-0 mt-2 me-1 electricity flex-grow-1">
-    <ElectricityWidget notify={notify} family={family} />
+    <ElectricityWidget notify={notify} familyMembers={familyMembers} />
   </div>
 
   <div className="p-0 calendar mb-2 mt-auto flex-shrink-0">

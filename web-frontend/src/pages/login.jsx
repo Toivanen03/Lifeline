@@ -37,7 +37,6 @@ const Login = ({ notify }) => {
                 login(token, stayLoggedIn)
                 reset()
                 notify('Tervetuloa Lifelineen!', 'success')
-                navigate('/')
             } else {
                 const { data } = await getUserByEmail({
                     variables: {

@@ -65,6 +65,31 @@ export const ME = gql`
   }
 `
 
+export const FAMILY = gql`
+  query Family {
+    family {
+      familyId
+      name
+      owner {
+        id
+        name
+      }
+      members {
+        id
+        name
+        parent
+        notificationPermissions {
+          electricity
+          calendar
+          shopping
+          todo
+          chores
+        }
+      }
+    }
+  }
+`
+
 export const USERS = gql`
   query Users {
     users {
@@ -191,6 +216,12 @@ export const DELETE_USER = gql`
     deleteUser(id: $id) {
       id
     }
+  }
+`
+
+export const DELETE_FAMILY = gql`
+  mutation deleteFamily($familyId: ID!) {
+    deleteFamily(familyId: $familyId)
   }
 `
 

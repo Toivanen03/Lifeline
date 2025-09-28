@@ -1,8 +1,8 @@
 import { FontAwesomeIcon  } from '@fortawesome/react-fontawesome'
 import { faPeopleRoof, faBasketShopping, faUserTie, faSchool, faClipboardList, faBroom, faUserPlus, faGear } from '@fortawesome/free-solid-svg-icons'
 
-const SidePanel = ({ familyName, showCard }) => {
-    if (!familyName) return <div className="col-1"></div>
+const SidePanel = ({ familyMembers, showCard }) => {
+    if (!familyMembers) return <div className="col-1"></div>
 
     const links = [
         { icon: faPeopleRoof, label: 'Perheen hallinta', path: '/family' },

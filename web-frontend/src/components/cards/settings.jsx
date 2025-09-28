@@ -9,7 +9,7 @@ import UserSettings from "../settings/UserSettings"
 import { motion } from "framer-motion"
 import { useEffect } from "react"
 
-const Settings = ({ family }) => {
+const Settings = ({ notify }) => {
     const { mainSettings, updateMainSettings } = useSettings()
     const { clockSettings } = useClockSettings()
     const { electricitySettings } = useElectricitySettings()
@@ -106,14 +106,14 @@ const Settings = ({ family }) => {
                     )}
 
 {/* SÄHKÖN HINTATIEDOT */}
-                    <ElectricitySettings family={family} />
+                    <ElectricitySettings />
 
 {/* KALENTERIN ASETUKSET */}
                     <h2 className="mt-3 mb-3 align-self-start">Kalenterin asetukset</h2>
                     <CalendarSettings />
 {/* MUUT ASETUKSET */}
                     <h2 className="mt-3 mb-3 align-self-start">Käyttäjätilin asetukset</h2>
-                    <UserSettings />
+                    <UserSettings notify={notify} />
                 </div>
             </div>
         </div>

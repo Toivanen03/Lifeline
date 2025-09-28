@@ -3,16 +3,14 @@ import { UPDATE_NOTIFICATION_SETTINGS, SET_CHILD_NOTIFICATION_PERMISSION, ME } f
 import NotificationSettings from '../settings/notificationSettings/notificationSettings'
 import { motion } from "framer-motion"
 
-const Family = ({ family }) => {
+const Family = ({ familyMembers }) => {
   const { data: meData } = useQuery(ME)
   const currentUser = meData?.me
-
+  const familyName = currentUser?.name?.split(' ')[1] || ""
   const [updateNotificationSettings] = useMutation(UPDATE_NOTIFICATION_SETTINGS)
   const [setChildPermission] = useMutation(SET_CHILD_NOTIFICATION_PERMISSION)
 
   if (!currentUser) return <div>Ladataan...</div>
-
-  const familyName = family[0]?.name.split(" ")[1] || "Perhe"
 
   const notificationTypes = [
     { type: "electricity", title: "Sähkön hinta" },
@@ -42,7 +40,7 @@ const Family = ({ family }) => {
               updateNotificationSettings={updateNotificationSettings}
               setChildPermission={setChildPermission}
               currentUser={currentUser}
-              family={family}
+              familyMembers={familyMembers}
             />
           ))}
           </div>

@@ -33,6 +33,7 @@ const ConfirmEmail = ({ notify }) => {
 
         setStatus("Onnistui")
         notify("Sähköpostiosoite vahvistettu onnistuneesti.", "success")
+        navigate('/')
 
       } catch (err) {
         console.error(err)

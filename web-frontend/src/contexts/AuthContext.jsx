@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(false)
   }, [])
 
-  const login = (newToken, stayLoggedIn = false) => {
+  const login = (newToken, stayLoggedIn) => {
     const decoded = jwtDecode(newToken)
     const expiryTime = Date.now() + (stayLoggedIn ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000)
 
