@@ -1,28 +1,39 @@
 import { useForm } from "react-hook-form"
 import { useMutation } from "@apollo/client/react"
 import { ADD_USER } from "../schema/queries"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useContext } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { updatePasswordSchema, validateFullName, validateEmail } from "../../../mobile-app/schema/validateUserData"
+import { AuthContext } from "../contexts/AuthContext"
 
 const Register = ({ notify }) => {
     const { state } = useLocation()
+    const { logout, isLoggedIn } = useContext(AuthContext)
     const navigate = useNavigate()
     const [seconds, setSeconds] = useState(null)
     const [createUser] = useMutation(ADD_USER)
     const { register, handleSubmit, watch } = useForm({
         defaultValues: {
-        userName: state?.username || "",
+        userName: state?.username || state?.invitedUser?.email || "",
         password: state?.password || ""
         }
     })
 
+    const invited = !!state?.invitedUser
+    const familyId = state?.invitedUser?.familyId
+
+    useEffect(() => {
+    if (isLoggedIn) {
+        logout()
+    }
+    }, [isLoggedIn, logout])
+    
     const consent = watch("consent")
 
     useEffect(() => {
         if (seconds === null) return
         if (seconds <= 0) {
-            navigate("/login")
+            navigate("/")
             return
         }
 
@@ -58,25 +69,49 @@ const Register = ({ notify }) => {
         return
         }
 
-        try {
-            const response = await createUser({
-                variables: {
-                username: formData.userName,
-                name: name,
-                password: formData.password,
-                parent: true,
-                }
-            })
+        if (!invited) {
+            try {
+                const response = await createUser({
+                    variables: {
+                        username: formData.userName,
+                        name: name,
+                        password: formData.password,
+                    parent: true,
+                    }
+                })
 
-            if (response) {
-                notify(
-                `Perhe ${lastname} luotu onnistuneesti. Vahvista käyttäjätunnuksesi sähköpostiisi lähetetyn linkin avulla.`,
-                "success"
-                )
-                setSeconds(15)
+                if (response) {
+                    notify(
+                    `Perhe ${lastname} luotu onnistuneesti. Vahvista käyttäjätunnuksesi sähköpostiisi lähetetyn linkin avulla.`,
+                    "success"
+                    )
+                    setSeconds(10)
+                }
+            } catch (error) {
+                notify(`Virhe käyttäjän luomisessa: ${error.message}`, "error")
             }
-        } catch (error) {
-            notify(`Virhe käyttäjän luomisessa: ${error.message}`, "error")
+        } else {
+            try {
+                const response = await createUser({
+                    variables: {
+                        username: formData.userName,
+                        name: name,
+                        password: formData.password,
+                        parent: state?.invitedUser?.parent || false,
+                        familyId,
+                        invitedUserId: state?.invitedUser?.id || null
+                    }
+                })
+                if (response) {
+                    notify(
+                    `Perheeseen liittyminen onnistui. Voit nyt kirjautua Lifelineen.`,
+                    "success"
+                    )
+                    setSeconds(5)
+                }
+            } catch (error) {
+                notify(`Virhe: ${error.message}`, "error")
+            }
         }
     }
 
@@ -101,6 +136,7 @@ const Register = ({ notify }) => {
                             {...register("userName")}
                             className="form-control rounded"
                             required
+                            disabled={invited}
                         />
                     </div>
 
@@ -145,10 +181,15 @@ const Register = ({ notify }) => {
                         />
                     </div>
 
-                    <div className="text-start mt-3" style={{padding: 10}}>
-                        <p>Rekisteröitymällä Lifelinen käyttäjäksi luot<b style={{color: 'blue'}}> pääkäyttäjän tunnukset ja uuden perheen</b>, etkä voi liittyä jo olemassa olevaan perheeseen. Mikäli haluat tunnusten luomisen sijaan
-                            <i> liittyä</i> perheeseen, <i>pyydä perheesi Parent-käyttäjältä kutsulinkki</i> sähköpostiisi.
-                        </p>
+                    <div className="text-center mt-3" style={{padding: 10}}>
+                        {!invited ? (
+                            <p>Rekisteröitymällä Lifelinen käyttäjäksi luot<b style={{color: 'blue'}}> pääkäyttäjän tunnukset ja uuden perheen</b>, etkä voi liittyä jo olemassa olevaan perheeseen. Mikäli haluat tunnusten luomisen sijaan
+                                <i> liittyä</i> perheeseen, <i>pyydä perheesi Parent-käyttäjältä kutsulinkki</i> sähköpostiisi.
+                            </p>
+                        ) : (
+                            <p>Rekisteröitymällä Lifelinen käyttäjäksi <b style={{color: 'blue'}}>liityt perheeseen, jolta sait kutsulinkin.</b>
+                            </p>
+                        )}
                     </div>
 
                     <div className="mb-1 align-items-center text-center" style={{ width: 300 }}>

@@ -11,12 +11,9 @@ const Forecast = () => {
     const { state } = useLocation()
     const { lat, lon, location } = state || {}
 
-    const { data, loading, error } = useQuery(GET_FORECAST, {
+    const { data } = useQuery(GET_FORECAST, {
         variables: { lat, lon },
     })
-
-    if (loading) return <p>Ladataan...</p>
-    if (error) return <p>Virhe: {error.message}</p>
     if (!data?.forecast) return <p>Ennustetta ei saatavilla.</p>
 
 const groupedByDay = data.forecast.reduce((acc, item) => {

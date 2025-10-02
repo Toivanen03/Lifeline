@@ -1,6 +1,5 @@
-import { useNavigate } from "react-router-dom"
 import { AuthContext } from "../../contexts/AuthContext"
-import { useContext, useEffect } from 'react'
+import { useContext } from 'react'
 import { useState } from "react"
 import { validateEmail } from "../../schema/validateUserData"
 import { useMutation } from "@apollo/client/react"
@@ -9,16 +8,9 @@ import { faTrashCan } from '@fortawesome/free-solid-svg-icons'
 import { motion } from "framer-motion"
 
 const ShoppingList = ({ notify }) => {
-    const { isLoggedIn, isLoading, currentUser } = useContext(AuthContext)
-    const navigate = useNavigate()
+    const { currentUser } = useContext(AuthContext)
     const [email, setEmail] = useState('')
     const [familyMembers, setFamilyMembers] = useState([])
-
-    useEffect(() => {
-        if (!isLoading && !isLoggedIn) {
-            navigate('/login')
-        }
-    }, [isLoggedIn, isLoading, navigate])
 
     const addFamilyMember = () => {
         const validation = validateEmail.safeParse({ email })

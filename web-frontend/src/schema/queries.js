@@ -27,6 +27,17 @@ export const RESEND_EMAIL_VERIFICATION_TOKEN = gql`
   }
 `
 
+export const GET_FAMILY_OWNER = gql`
+  query GetFamilyOwner($familyId: ID!) {
+    familyOwner(familyId: $familyId) {
+      id
+      username
+      name
+      parent
+    }
+  }
+`
+
 export const ADD_USER = gql`
   mutation CreateUser(
     $username: String!, 
@@ -129,7 +140,7 @@ export const LOGIN = gql`
 `
 
 export const VERIFY_EMAIL_OR_INVITE = gql`
-  mutation VerifyEmailOrInvite($token: String!, $familyId: String) {
+  mutation VerifyEmailOrInvite($token: String, $familyId: String) {
     verifyEmailOrInvite(token: $token, familyId: $familyId) {
       id
       username
@@ -140,29 +151,24 @@ export const VERIFY_EMAIL_OR_INVITE = gql`
   }
 `
 
-export const SET_CHILD_NOTIFICATION_PERMISSION = gql`
-  mutation SetChildNotificationPermission($userId: ID!, $type: String!, $canManage: Boolean!) {
-    setChildNotificationPermission(userId: $userId, type: $type, canManage: $canManage) {
-      id
-      notificationPermissions {
-        electricity
-        calendar
-        shopping
-        todo
-        chores
-      }
-    }
-  }
-`
-
 export const UPDATE_NOTIFICATION_SETTINGS = gql`
-  mutation UpdateNotificationSettings($userId: ID!, $type: String!, $enabled: Boolean!) {
-    updateNotificationSettings(userId: $userId, type: $type, enabled: $enabled) {
-      electricity { userId enabled }
-      calendar { userId enabled }
-      shopping { userId enabled }
-      todo { userId enabled }
-      chores { userId enabled }
+  mutation UpdateNotificationSettings(
+    $familyId: ID!, 
+    $userId: ID!, 
+    $type: String!, 
+    $enabled: Boolean, 
+    $canManage: Boolean
+  ) {
+    updateNotificationSettings(
+      familyId: $familyId, 
+      userId: $userId, 
+      type: $type, 
+      enabled: $enabled, 
+      canManage: $canManage
+    ) {
+      userId
+      enabled
+      canManage
     }
   }
 `
@@ -240,38 +246,27 @@ export const NOTIFICATION_SETTINGS = gql`
       electricity {
         userId
         enabled
+        canManage
       }
       calendar {
         userId
         enabled
+        canManage
       }
       shopping {
         userId
         enabled
+        canManage
       }
       todo {
         userId
         enabled
+        canManage
       }
       chores {
         userId
         enabled
-      }
-    }
-  }
-`
-
-export const GET_CHILD_NOTIFICATION_PERMISSIONS = gql`
-  query GetChildNotificationPermission {
-    users {
-      id
-      name
-      notificationPermissions {
-        electricity
-        calendar
-        shopping
-        todo
-        chores
+        canManage
       }
     }
   }

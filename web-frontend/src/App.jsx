@@ -7,8 +7,10 @@ import EmailVerify from './pages/emailverify'
 import ResetPassword from './pages/ResetPassword'
 import Register from './pages/register'
 import ConfirmEmail from './pages/ConfirmEmail'
+import AcceptInvitation from './pages/AcceptInvitation'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import ProtectedRoute from './config/ProtectedRoute'
 import { useQuery, useLazyQuery } from '@apollo/client/react'
 import { FAMILY, ME } from './schema/queries'
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
@@ -84,9 +86,12 @@ function App() {
                       <Route path="/forgot" element={<Forgot notify={notify} />} />
                       <Route path="/reset-password" element={<ResetPassword notify={notify} />} />
                       <Route path="/emailverify" element={<EmailVerify notify={notify} />} />
+                      <Route path="/accept-invitation" element={<AcceptInvitation notify={notify} />} />
                       <Route path="/confirm-email" element={<ConfirmEmail notify={notify} />} />
+                      <Route element={<ProtectedRoute />}>
                         <Route path="/" element={<Home familyMembers={familyMembers} notify={notify} />}>
-                        {Cards({notify, familyMembers, firstname})}
+                          {Cards({notify, familyMembers, firstname})}
+                        </Route>
                       </Route>
                     </Routes>
                   </CalendarDayProvider>

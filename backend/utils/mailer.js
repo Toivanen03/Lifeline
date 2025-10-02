@@ -29,6 +29,12 @@ const MailSender = async (user, token, type = 'reset-password') => {
         subject = 'Salasanan palautus'
         html = fs.readFileSync(path.resolve('emailTemplates', 'resetPassword.html'), 'utf-8')
             .replace(/{{RESET_LINK}}/g, link)
+    } else if (type === 'lifeline-invitation') {
+        link = `${url}/accept-invitation?token=${token}`
+        subject = 'Kutsu Lifelinen käyttäjäksi'
+        html = fs.readFileSync(path.resolve('emailTemplates', 'emailInvitation.html'), 'utf-8')
+            .replace(/{{CONFIRM_LINK}}/g, link)
+            .replace(/{{PARENT_USER}}/g, user.invitedByName || 'Perheenjäsen')
     } else {
         throw new Error('Tuntematon sähköpostityyppi')
     }

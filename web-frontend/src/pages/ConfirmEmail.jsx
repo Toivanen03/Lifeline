@@ -14,6 +14,7 @@ const ConfirmEmail = ({ notify }) => {
   useEffect(() => {
     if (!token) {
       notify('Token puuttuu tai linkki on virheellinen.', 'danger')
+      navigate('/')
       return
     }
 
@@ -44,7 +45,7 @@ const ConfirmEmail = ({ notify }) => {
     }
 
     verify()
-  }, [token, verifyEmailOrInvite, notify])
+  }, [token, verifyEmailOrInvite, notify, navigate])
 
   useEffect(() => {
     if (seconds <= 0) {

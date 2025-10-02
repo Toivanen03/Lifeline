@@ -43,7 +43,7 @@ router.post('/forgot-password', async (req, res) => {
 
 router.post('/reset-password', async (req, res) => {
   const { token, password } = req.body
-console.log("back kutsuttu")
+
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
     const user = await User.findById(decoded.id)

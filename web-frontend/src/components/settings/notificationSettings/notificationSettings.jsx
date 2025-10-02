@@ -1,90 +1,56 @@
 import { NOTIFICATION_SETTINGS } from "../../../schema/queries"
 import { useQuery } from "@apollo/client/react"
 
-const NotificationSettings = ({
-  type,
-  title,
-  updateNotificationSettings,
-  setChildPermission,
-  currentUser,
-  familyMembers
-  }) => {
-    const { data: settingsData, refetch: refetchSettings } = useQuery(NOTIFICATION_SETTINGS, {
-      skip: !currentUser
-    })
+const NotificationSettings = ({ type, title, updateNotificationSettings, currentUser, familyMembers }) => {
+  const { data: settingsData, refetch: refetchSettings } = useQuery(NOTIFICATION_SETTINGS, {
+    skip: !currentUser
+  })
 
   const settings = settingsData?.notificationSettings
 
-  const usersArray = familyMembers?.map((u) => ({
-    id: u.id,
-    name: u.name,
-    enabled: settings?.[type]?.find((e) => e.userId === u.id)?.enabled ?? false,
-    canManageOwnNotifications: u.notificationPermissions?.[type] ?? false,
-    parent: u.parent ?? false,
-  }))
+  const usersArray = familyMembers?.map(u => {
+    const typeSettings = settings?.[type] || []
+    const setting = typeSettings.find(e => e.userId === u.id) || {}
+
+    return {
+      id: u.id,
+      name: u.name,
+      enabled: setting.enabled ?? false,
+      canManage: setting.canManage ?? true,
+      parent: u.parent ?? false
+    }
+  })
 
   const isParent = currentUser?.parent
-  const masterEnabled = usersArray?.some((u) => u.enabled) ?? false
 
-  const toggleMaster = async () => {
-    try {
-      if (masterEnabled) {
-        await Promise.all(
-          usersArray.map((u) =>
-            updateNotificationSettings({
-              variables: { userId: u.id, type, enabled: false },
-            })
-          )
-        )
-      } else {
-        await updateNotificationSettings({
-          variables: { userId: currentUser.id, type, enabled: true },
-        })
-      }
-      await refetchSettings()
-    } catch (err) {
-      console.error("Backend update failed", err)
-    }
-  }
+  const visibleUsers = (currentUser.isOwner || currentUser.parent)
+    ? usersArray
+    : usersArray.filter(u => u.id === currentUser.id)
 
   return (
-    <div className="d-flex flex-column align-items-center">
-      <div className="d-flex justify-content-between align-items-center mb-3 col-10">
+    <div className="d-flex flex-column align-items-center p-2">
+      <div className="d-flex justify-content-between align-items-center mb-2 col-7">
         <div className="col-4 text-start">
           <label className="mb-0"><h5>{title}</h5></label>
         </div>
-
-        <div className="col-4 d-flex justify-content-center form-check form-switch text-center">
-          <input
-            type="checkbox"
-            className="form-check-input"
-            checked={masterEnabled}
-            onChange={toggleMaster}
-          />
-        </div>
-
-        <div className="col-4 d-flex justify-content-center text-end">
-          {isParent && masterEnabled && <small>Lapsi saa hallita itse</small>}
-        </div>
+          {isParent && <small><b>Hallintaoikeus</b></small>}
       </div>
 
-      {masterEnabled && (
-        <div className="d-flex flex-column align-items-center col-12 mb-5">
-          {usersArray.map((u) => {
-            const isSelf = u.id === currentUser?.id
-            const allowed = isParent || (isSelf && u.canManageOwnNotifications)
+      <div className="d-flex flex-column align-items-end col-8">
+        {visibleUsers.map(u => {
+          const isSelf = u.id === currentUser?.id
+          const allowed = currentUser.isOwner || (isSelf && u.canManage) || (currentUser.parent && !u.parent)
 
-            return (
-              <div key={u.id} className="col-10 d-flex justify-content-between align-items-center">
-                <div className="col-4 text-start">
-                  <label htmlFor={`${u.name}Switch`} className="form-check-label mb-0">
-                    {u.name}
-                  </label>
-                </div>
+          return (
+            <div key={u.id} className="col-10 d-flex justify-content-between align-items-center mb-2">
+              <div className="col-4 text-start">
+                <label htmlFor={`${u.name}Switch`} className="form-check-label mb-0">{isParent ? (u.name.split(' ')[0]) : (<span>Lähetä ilmoituksia</span>)}</label>
+              </div>
 
-                <div className="col-4 d-flex justify-content-center form-check form-switch text-center">
+              <div className="col-4 d-flex justify-content-between me-5">
+                <div className="form-check form-switch">
                   <input
-                    id={`${u.name}Switch`}
+                    id={`${u.id}Switch`}
                     type="checkbox"
                     className="form-check-input"
                     checked={u.enabled}
@@ -92,7 +58,12 @@ const NotificationSettings = ({
                     onChange={async () => {
                       try {
                         await updateNotificationSettings({
-                          variables: { userId: u.id, type, enabled: !u.enabled },
+                          variables: {
+                            familyId: currentUser.familyId,
+                            userId: u.id,
+                            type,
+                            enabled: !u.enabled
+                          }
                         })
                         await refetchSettings()
                       } catch (err) {
@@ -102,17 +73,23 @@ const NotificationSettings = ({
                   />
                 </div>
 
-                <div className="col-4 d-flex justify-content-center form-check form-switch text-center">
-                  {isParent && !u.parent && (
+                {isParent ? (
+                  <div className="form-check form-switch">
                     <input
                       id={`${u.id}PermissionSwitch`}
                       type="checkbox"
                       className="form-check-input"
-                      checked={u.canManageOwnNotifications}
+                      checked={u.canManage}
+                      disabled={!allowed || isSelf}
                       onChange={async () => {
                         try {
-                          await setChildPermission({
-                            variables: { userId: u.id, type, canManage: !u.canManageOwnNotifications },
+                          await updateNotificationSettings({
+                            variables: {
+                              familyId: currentUser.familyId,
+                              userId: u.id,
+                              type,
+                              canManage: !u.canManage
+                            }
                           })
                           await refetchSettings()
                         } catch (err) {
@@ -120,13 +97,17 @@ const NotificationSettings = ({
                         }
                       }}
                     />
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <div className="me-3">
+                    {isParent && <small>Ei ole</small>}
+                  </div>
+                )}
               </div>
-            )
-          })}
-        </div>
-      )}
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }

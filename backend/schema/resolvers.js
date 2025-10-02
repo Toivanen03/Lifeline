@@ -1,12 +1,12 @@
 import bcrypt from 'bcryptjs'
-import mongoose from 'mongoose'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
+import Family from '../models/Family.js'
 import User from '../models/User.js'
+import InvitedUser from '../models/InvitedUser.js'
 import GlobalNamedayEntries from '../models/GlobalNamedayEntries.js'
 import GlobalFlagdayEntries from '../models/GlobalFlagdayEntries.js'
 import NotificationSettings from '../models/Notification.js'
-import Family from '../models/Family.js'
 import { createUserSchema } from './userValidation.js'
 import { GraphQLError } from 'graphql'
 import { z } from 'zod'
@@ -37,15 +37,32 @@ const requireParent = (user) => {
   }
 }
 
+const categories = ['electricity','calendar','shopping','todo','chores']
+
 const attachNotificationSettings = (users, settings) => {
   return users.map(user => {
     const perms = settings
       ? {
-          electricity: settings.electricity.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false,
-          calendar: settings.calendar.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false,
-          shopping: settings.shopping.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false,
-          todo: settings.todo.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false,
-          chores: settings.chores.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false
+          electricity: {
+            enabled: settings.electricity.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false,
+            canManage: settings.electricity.find(e => e.userId.toString() === user._id.toString())?.canManage ?? true
+          },
+          calendar: {
+            enabled: settings.calendar.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false,
+            canManage: settings.calendar.find(e => e.userId.toString() === user._id.toString())?.canManage ?? true
+          },
+          shopping: {
+            enabled: settings.shopping.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false,
+            canManage: settings.shopping.find(e => e.userId.toString() === user._id.toString())?.canManage ?? true
+          },
+          todo: {
+            enabled: settings.todo.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false,
+            canManage: settings.todo.find(e => e.userId.toString() === user._id.toString())?.canManage ?? true
+          },
+          chores: {
+            enabled: settings.chores.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false,
+            canManage: settings.chores.find(e => e.userId.toString() === user._id.toString())?.canManage ?? true
+          }
         }
       : {}
 
@@ -132,6 +149,12 @@ const resolvers = {
       }
     },
 
+    familyOwner: async (_, { familyId }) => {
+      const family = await Family.findById(familyId).populate('owner')
+      if (!family) throw new Error('Perhettä ei löytynyt')
+      return family.owner
+    },
+
     userByEmail: async (_root, { email }, context) => {
       if (!email) return null
       const user = await User.findOne({ username: email.toLowerCase().trim() })
@@ -213,7 +236,7 @@ const resolvers = {
 
   Mutation: {
 
-    createUser: async (_root, { username, password, name, parent, familyId }) => {
+    createUser: async (_root, { username, password, name, parent, familyId, invitedUserId }) => {
       try {
         createUserSchema.parse({ username, password, name, parent })
       } catch (err) {
@@ -226,47 +249,7 @@ const resolvers = {
 
       const passwordHash = await bcrypt.hash(password, 10)
 
-      if (parent) {
-        const user = await new User({
-          username: username.toLowerCase().trim(),
-          passwordHash,
-          name,
-          parent,
-          emailVerified: false
-        }).save()
-
-        const family = await new Family({
-          name: `${name.split(' ')[1]}`,
-          owner: user._id
-        }).save()
-
-        user.familyId = family._id
-        await user.save()
-
-        const emailVerificationToken = jwt.sign(
-          { id: user._id },
-          process.env.JWT_SECRET,
-          { expiresIn: expiryMinutes }
-        )
-
-        user.emailVerificationToken = emailVerificationToken
-        user.emailVerificationTokenExpiry = new Date(Date.now() + expiry)
-        await user.save()
-
-        await MailSender(user, emailVerificationToken, 'confirm-email')
-
-        return {
-          ...user.toObject(),
-          id: user._id.toString(),
-          token: jwt.sign(
-            { username: user.username, id: user._id, familyId: user.familyId },
-            process.env.JWT_SECRET
-          )
-        }
-
-      } else {
-        if (!familyId) throw new Error("familyId puuttuu lapselta")
-
+      if (familyId) {
         const family = await Family.findById(familyId)
         if (!family) throw new Error("Perhettä ei löytynyt")
 
@@ -276,29 +259,81 @@ const resolvers = {
           name,
           parent,
           familyId,
-          emailVerified: false
+          emailVerified: true
         }).save()
 
-        const emailVerificationToken = jwt.sign(
-          { id: user._id },
-          process.env.JWT_SECRET,
-          { expiresIn: expiryMinutes }
-        )
+        const settings = await NotificationSettings.findOne({ familyId })
+        const categories = ['electricity','calendar','shopping','todo','chores']
+        categories.forEach(cat => {
+          settings[cat].push({ userId: user._id, enabled: true, canManage: true })
+        })
+        await settings.save()
+console.log("IUID", invitedUserId)
 
-        user.emailVerificationToken = emailVerificationToken
-        user.emailVerificationTokenExpiry = new Date(Date.now() + expiry)
-        await user.save()
-
-        await MailSender(user, emailVerificationToken, 'confirm-email')
+        if (invitedUserId) {
+          const invitedUser = await InvitedUser.findById(invitedUserId)
+console.log("IU", invitedUser)
+console.log("FID:", familyId)
+          if (invitedUser && invitedUser.familyId.toString() === familyId.toString()) {
+            await invitedUser.deleteOne()
+          }
+        }
 
         return {
           ...user.toObject(),
           id: user._id.toString(),
           token: jwt.sign(
-            { username: user.username, id: user._id, familyId: user.familyId },
+            { username: user.username, id: user._id, familyId: user.familyId, parent: user.parent, name: user.name },
             process.env.JWT_SECRET
           )
         }
+      }
+
+      const user = await new User({
+        username: username.toLowerCase().trim(),
+        passwordHash,
+        name,
+        parent: true,
+        emailVerified: false
+      }).save()
+
+      const family = await new Family({
+        name: `${name.split(' ')[1]}`,
+        owner: user._id
+      }).save()
+
+      user.familyId = family._id
+      await user.save()
+
+      const settingsData = {}
+      categories.forEach(cat => {
+        settingsData[cat] = [{ userId: user._id, enabled: true, canManage: true }]
+      })
+      const settings = new NotificationSettings({
+        familyId: family._id,
+        ...settingsData
+      })
+      await settings.save()
+
+      const emailVerificationToken = jwt.sign(
+        { id: user._id },
+        process.env.JWT_SECRET,
+        { expiresIn: expiryMinutes }
+      )
+
+      user.emailVerificationToken = emailVerificationToken
+      user.emailVerificationTokenExpiry = new Date(Date.now() + expiry)
+      await user.save()
+
+      await MailSender(user, emailVerificationToken, 'confirm-email')
+
+      return {
+        ...user.toObject(),
+        id: user._id.toString(),
+        token: jwt.sign(
+          { username: user.username, id: user._id, familyId: user.familyId, parent: user.parent, name: user.name },
+          process.env.JWT_SECRET
+        )
       }
     },
 
@@ -316,7 +351,9 @@ const resolvers = {
       const userToken = {
         username: user.username,
         id: user._id,
-        familyId: user.familyId
+        familyId: user.familyId,
+        parent: user.parent,
+        name: user.name
       }
 
       return { value: jwt.sign(userToken, process.env.JWT_SECRET) }
@@ -382,76 +419,39 @@ const resolvers = {
       return { id: user.id }
     },
 
-    verifyEmailOrInvite: async (_, { token, familyId }) => {
+    verifyEmailOrInvite: async (_, { token, familyId }) => { 
       if (!token) throw new GraphQLError("Token puuttuu")
 
-      const user = await User.findOne({ emailVerificationToken: token })
-
-      if (!user) {
-        throw new GraphQLError("Käyttäjää ei löytynyt tai token vanhentunut")
-      }
-
-      if (!user.emailVerificationToken || user.emailVerificationTokenExpiry < new Date()) {
-        throw new GraphQLError("Token on vanhentunut")
-      }
-
-      if (familyId) {
-        user.familyId = familyId
-        user.parent = false
-      }
-
-      user.emailVerificationToken = null
-      user.emailVerified = true
-      await user.save()
-
-      return user
-    },
-
-    resendEmailVerificationToken: async (_, { email }) => {
-      const user = await User.findOne({ username: email.toLowerCase().trim() })
-      if (!user) throw new GraphQLError("Käyttäjää ei löytynyt")
-
-      if (user.emailVerified) {
-        throw new GraphQLError("Sähköposti on jo vahvistettu")
-      }
-
-      const newToken = crypto.randomBytes(32).toString('hex')
-      user.emailVerificationToken = newToken
-      user.emailVerificationTokenExpiry = new Date(Date.now() + expiry)
-      await user.save()
-
-      await MailSender(user, newToken, 'confirm-email')
-      return true
-    },
-
-    setChildNotificationPermission: async (_root, { userId, type, canManage }, context) => {
-        const currentUser = context.currentUser
-        if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
-        if (!currentUser.parent) throw new Error("Ei valtuuksia")
-
-        const targetUser = await User.findById(userId)
-        if (!targetUser) throw new Error("Käyttäjää ei löytynyt")
-        if (targetUser.familyId.toString() !== currentUser.familyId.toString()) {
-          throw new Error("Ei valtuuksia muuttaa tämän käyttäjän asetuksia")
+      let user = await User.findOne({ emailVerificationToken: token })
+      if (user) {
+        if (!user.emailVerificationToken || user.emailVerificationTokenExpiry < new Date()) {
+          throw new GraphQLError("Token on vanhentunut")
         }
 
-        if (!targetUser.notificationPermissions) {
-          targetUser.notificationPermissions = {
-            electricity: false,
-            calendar: false,
-            shopping: false,
-            todo: false,
-            chores: false
-          }
+        if (familyId) {
+          user.familyId = familyId
+          user.parent = false
         }
 
-        targetUser.notificationPermissions[type] = canManage
-        await targetUser.save()
+        user.emailVerificationToken = null
+        user.emailVerified = true
+        await user.save()
+        return user
+      }
 
-        return targetUser
+      const invitedUser = await InvitedUser.findOne({ invitationToken: token })
+      if (!invitedUser) throw new GraphQLError("Token ei kelpaa")
+      if (invitedUser.invitationTokenExpiry < new Date()) throw new GraphQLError("Token vanhentunut")
+
+      invitedUser.emailVerified = true
+      invitedUser.invitationToken = null
+      invitedUser.invitationTokenExpiry = null
+      await invitedUser.save()
+
+      return invitedUser
     },
 
-    updateNotificationSettings: async (_root, { userId, type, enabled }, context) => {
+    updateNotificationSettings: async (_root, { familyId, userId, type, enabled, canManage }, context) => {
       const currentUser = context.currentUser
       if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
 
@@ -459,24 +459,24 @@ const resolvers = {
         throw new Error("Ei valtuuksia muuttaa muiden asetuksia")
       }
 
-      let settings = await NotificationSettings.findOne({ familyId: currentUser.familyId })
+      let settings = await NotificationSettings.findOne({ familyId })
       if (!settings) {
         settings = new NotificationSettings({
-          familyId: currentUser.familyId,
+          familyId,
           electricity: [],
           calendar: [],
           shopping: [],
           todo: [],
           chores: []
         })
-        await settings.save()
       }
 
       const existing = settings[type].find(e => e.userId.toString() === userId)
       if (existing) {
-        existing.enabled = enabled
+        if (enabled !== undefined) existing.enabled = enabled
+        if (canManage !== undefined) existing.canManage = canManage
       } else {
-        settings[type].push({ userId, enabled })
+        settings[type].push({ userId, enabled: enabled ?? true, canManage: canManage ?? true })
       }
 
       await settings.save()

@@ -24,7 +24,7 @@ const defaultOptions = {
 }
 
 const authLink = new SetContextLink(async (_, { headers }) => {
-  const token = await AsyncStorage.getItem(`parent-token`)
+  const token = await AsyncStorage.getItem(`user-token`)
   return {
     headers: {
       ...headers,

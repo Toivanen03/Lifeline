@@ -1,21 +1,24 @@
 import cron from 'node-cron'
 import User from './models/User.js'
+import InvitedUser from './models/InvitedUser.js'
 import mongoose from 'mongoose'
 
-const expiry = 12 * 60 * 60 * 1000
-
 mongoose.connection.once('open', () => {
-    cron.schedule('0 3 * * *', async () => {
+    cron.schedule('0 * * * *', async () => {
         try {
             const now = new Date()
-            const cutoff = new Date(now - expiry)
 
-            const result = await User.deleteMany({
+            const userResult = await User.deleteMany({
                 emailVerified: false,
-                createdAt: { $lt: cutoff }
+                emailVerificationTokenExpiry: { $lt: now }
             })
 
-            console.log(`[CLEANUP] Poistettu ${result.deletedCount} vahvistamatonta käyttäjää`)
+            const invitedUserResult = await InvitedUser.deleteMany({
+                invitationTokenExpiry: { $lt: now }
+            })
+
+            console.log(`[CLEANUP] Poistettu ${userResult.deletedCount} vahvistamatonta käyttäjää`)
+            console.log(`[CLEANUP] Poistettu ${invitedUserResult.deletedCount} kutsuttua käyttäjää`)
 
         } catch (err) {
             console.error(err)

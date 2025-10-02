@@ -19,7 +19,7 @@ const defaultOptions = {
 }
 
 const authLink = new SetContextLink((_, { headers }) => {
-  const token = localStorage.getItem(`parent-token`)
+  const token = localStorage.getItem(`user-token`)
   return {
     headers: {
       ...headers,

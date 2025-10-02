@@ -75,8 +75,8 @@ const Login = ({ notify }) => {
             }
             notify(`VIRHE KIRJAUTUMISESSA: ${error.message}`, "error")
             }
-    }
-
+    }///////////////////////////////////////TARKISTA KIRJAUTUMISLOGIIKKA ALIKÄYTTÄJÄLLÄ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//////////SEKÄ KUTSUTUN KÄYTTÄJÄN POISTO !!!!!!!!!!!!!!!!!!!
     const forgot = () => {
         navigate('/forgot')
     }

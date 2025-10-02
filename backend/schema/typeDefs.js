@@ -5,6 +5,7 @@ const typeDefs = gql`
   type UserSettingEntry {
     userId: ID!
     enabled: Boolean!
+    canManage: Boolean!
   }
 
   type NotificationSettings {
@@ -73,6 +74,7 @@ const typeDefs = gql`
   type Query {
     me: User
     family: Family
+    familyOwner(familyId: ID!): User
     users: [User]
     user(id: ID!): User
     userByEmail(email: String!): User
@@ -112,6 +114,13 @@ const typeDefs = gql`
     links: [String]
   }
 
+  type AcceptInviteResponse {
+    email: String!
+    familyId: ID!
+    parent: Boolean!
+    invitedUserId: ID!
+  }
+
   type Mutation {
     login(username: String!, password: String!): Token
     createUser(username: String!, password: String!, name: String!, parent: Boolean!, familyId: ID): User
@@ -121,8 +130,7 @@ const typeDefs = gql`
     updatePassword(newPassword: String, token: String): User
     verifyEmailOrInvite(token: String, familyId: String): User
     requestPasswordReset(email: String!): Boolean
-    updateNotificationSettings(userId: ID!, type: String!, enabled: Boolean!): NotificationSettings
-    setChildNotificationPermission(userId: ID!, type: String!, canManage: Boolean!): User
+    updateNotificationSettings(familyId: ID, userId: ID!, type: String!, enabled: Boolean, canManage: Boolean): UserSettingEntry
     resendEmailVerificationToken(email: String!): Boolean
   }
 `

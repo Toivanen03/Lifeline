@@ -5,7 +5,7 @@ const SidePanel = ({ familyMembers, showCard }) => {
     if (!familyMembers) return <div className="col-1"></div>
 
     const links = [
-        { icon: faPeopleRoof, label: 'Perheen hallinta', path: '/family' },
+        { icon: faPeopleRoof, label: 'Perheen ilmoitukset', path: '/family' },
         { icon: faBasketShopping, label: 'Ostoslistat', path: '/shoppinglist' },
         { icon: faUserTie, label: 'Työvuorot', path: '/shifts' },
         { icon: faSchool, label: 'Lukujärjestykset', path: '/schedules' },

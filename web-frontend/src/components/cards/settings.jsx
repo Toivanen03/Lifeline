@@ -6,8 +6,9 @@ import { useSettings } from "../../contexts/SettingsContext"
 import { useClockSettings } from "../../contexts/ClockContext"
 import { useElectricitySettings } from "../../contexts/ElectricityContext"
 import UserSettings from "../settings/UserSettings"
+import { AuthContext } from "../../contexts/AuthContext"
 import { motion } from "framer-motion"
-import { useEffect } from "react"
+import { useEffect, useContext } from "react"
 
 const Settings = ({ notify }) => {
     const { mainSettings, updateMainSettings } = useSettings()

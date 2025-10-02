@@ -8,6 +8,7 @@ import resolvers from './schema/resolvers.js'
 import jwt from 'jsonwebtoken'
 import User from './models/User.js'
 import { passwordRoutes } from './routes/passwordRoutes.js'
+import { invitationRoutes } from './routes/invitationRoutes.js'
 import { emailConfirmationRoutes } from './routes/confirmEmail.js'
 import { locationRouter } from './routes/location.js'
 import './unverifiedUsersCleaner.js'
@@ -20,6 +21,7 @@ app.use(cors())
 app.use(express.json())
 app.use('/api', passwordRoutes)
 app.use('/api', emailConfirmationRoutes)
+app.use('/api', invitationRoutes)
 app.use('/api/location', locationRouter)
 
 app.use((req, res, next) => {
