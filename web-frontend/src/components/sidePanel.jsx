@@ -1,17 +1,17 @@
 import { FontAwesomeIcon  } from '@fortawesome/react-fontawesome'
-import { faPeopleRoof, faBasketShopping, faUserTie, faSchool, faClipboardList, faBroom, faUserPlus, faGear } from '@fortawesome/free-solid-svg-icons'
+import { faUtensils, faBasketShopping, faUserTie, faSchool, faClipboardList, faBroom, faPeopleRoof, faGear } from '@fortawesome/free-solid-svg-icons'
 
 const SidePanel = ({ familyMembers, showCard }) => {
     if (!familyMembers) return <div className="col-1"></div>
 
     const links = [
-        { icon: faPeopleRoof, label: 'Perheen ilmoitukset', path: '/family' },
         { icon: faBasketShopping, label: 'Ostoslistat', path: '/shoppinglist' },
+        { icon: faUtensils, label: 'Ruokalistat', path: '/mealmenus' },
         { icon: faUserTie, label: 'Työvuorot', path: '/shifts' },
         { icon: faSchool, label: 'Lukujärjestykset', path: '/schedules' },
         { icon: faClipboardList, label: 'Tehtävälistat', path: '/todos' },
         { icon: faBroom, label: 'Siivousvuorot', path: '/chores' },
-        { icon: faUserPlus, label: 'Lähetä kutsuja', path: '/invite' },
+        { icon: faPeopleRoof, label: 'Perhe', path: '/family' },
         { icon: faGear, label: 'Asetukset', path: '/settings' },
     ]
 

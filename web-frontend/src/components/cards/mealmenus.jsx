@@ -1,6 +1,6 @@
 import { motion } from "framer-motion"
 
-const Shifts = ({ notify }) => {
+const MealMenus = ({ notify }) => {
 
     return (
         <motion.div
@@ -20,4 +20,4 @@ const Shifts = ({ notify }) => {
     )
 }
 
-export default Shifts
+export default MealMenus

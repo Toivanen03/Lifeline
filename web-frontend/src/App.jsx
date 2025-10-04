@@ -11,8 +11,8 @@ import AcceptInvitation from './pages/AcceptInvitation'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import ProtectedRoute from './config/ProtectedRoute'
-import { useQuery, useLazyQuery } from '@apollo/client/react'
-import { FAMILY, ME } from './schema/queries'
+import { useLazyQuery } from '@apollo/client/react'
+import { FAMILY } from './schema/queries'
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { AuthContext } from './contexts/AuthContext'
 import { useContext, useEffect, useRef } from 'react'
@@ -25,29 +25,30 @@ import { CalendarSettingsProvider } from './contexts/CalendarContext'
 import { CalendarDayProvider } from './contexts/CalendarDayContext'
 
 function App() {
-  const { data: meData, refetch } = useQuery(ME, { fetchPolicy: "network-only" })
-  const [getFamily, { data: familyData, refetch: refetchFamily }] = useLazyQuery(FAMILY, { fetchPolicy: "network-only" });
-  const { isLoggedIn, isLoading } = useContext(AuthContext)
+  const [getFamily, { data: familyData }] = useLazyQuery(FAMILY, { fetchPolicy: "network-only" });
+  const { isLoggedIn, logout, isLoading, currentUser } = useContext(AuthContext)
   const navigate = useNavigate()
   const shownMessages = useRef(new Set())
   const location = useLocation()
 
-  const isDataLoaded = isLoggedIn ? (meData?.me && familyData?.family) : true
+  const isDataLoaded = isLoggedIn ? (familyData?.family) : true
 
   useEffect(() => {
+    if (isLoading) return
+
     if (isLoggedIn) {
       getFamily()
-      refetch()
-    } else if (!isLoading && !['/register', '/forgot', '/reset-password'].some(path => location.pathname.includes(path))) {
+    } else if (!['/register', '/forgot', '/reset-password', '/accept-invitation'].some(path => location.pathname.includes(path))) {
+      logout()
       navigate("/login")
     }
-  }, [isLoggedIn, isLoading, navigate, location.pathname, getFamily, refetch])
+  }, [isLoggedIn, isLoading, navigate, location.pathname, getFamily])
 
-  const firstname = isLoggedIn ? meData?.me?.name.split(" ")[0] : null
+  const firstname = isLoggedIn ? currentUser?.name?.split(" ")[0] : null
   const family = isLoggedIn ? familyData?.family?.name : ""
   const familyMembers = isLoggedIn ? familyData?.family?.members : []
 
-  if (isLoading || !isDataLoaded) return <div>Ladataan...</div>
+  if (!isDataLoaded) return <div>Ladataan...</div>
 
   const notify = (message, type) => {
     if (shownMessages.current.has(message)) return

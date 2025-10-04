@@ -22,6 +22,7 @@ const typeDefs = gql`
     id: ID!
     username: String!
     parent: Boolean!
+    owner: Boolean
     name: String!
     resetToken: String
     resetTokenExpiry: String
@@ -31,6 +32,7 @@ const typeDefs = gql`
     emailVerificationTokenExpiry: String
     familyId: ID!
     notificationPermissions: NotificationPermissions
+    invitedUserId: ID
   }
 
   type Weather {
@@ -71,6 +73,13 @@ const typeDefs = gql`
     chores: Boolean!
   }
 
+  type InvitedUser {
+    id: ID
+    username: String!
+    invitationTokenExpiry: String
+    familyName: String
+  }
+
   type Query {
     me: User
     family: Family
@@ -88,6 +97,7 @@ const typeDefs = gql`
     nameDayByDate(date: String!): [NameDay]!
     flagDays: [FlagDay!]!
     flagDayByDate(date: String!): [FlagDay!]!
+    invitedUsers(familyId: ID!): [InvitedUser!]!
   }
 
   type Family {
@@ -123,8 +133,9 @@ const typeDefs = gql`
 
   type Mutation {
     login(username: String!, password: String!): Token
-    createUser(username: String!, password: String!, name: String!, parent: Boolean!, familyId: ID): User
+    createUser(username: String!, password: String!, name: String!, parent: Boolean!, familyId: ID, invitedUserId: ID): User
     deleteUser(id: ID!): User
+    cancelInvitation(id: ID!): User
     deleteFamily(familyId: ID!): Boolean!
     updateUser(id: ID!, parent: Boolean!): User
     updatePassword(newPassword: String, token: String): User
@@ -132,6 +143,7 @@ const typeDefs = gql`
     requestPasswordReset(email: String!): Boolean
     updateNotificationSettings(familyId: ID, userId: ID!, type: String!, enabled: Boolean, canManage: Boolean): UserSettingEntry
     resendEmailVerificationToken(email: String!): Boolean
+    updateParent(userId: ID!, parent: Boolean!): User
   }
 `
 

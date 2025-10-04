@@ -1,5 +1,5 @@
-import { useElectricitySettings } from "../../../contexts/ElectricityContext"
-import { useSettings } from "../../../contexts/SettingsContext"
+import { useElectricitySettings } from "../../contexts/ElectricityContext"
+import { useSettings } from "../../contexts/SettingsContext"
 
 const ElectricitySettings = () => {
   const { electricitySettings, updateElectricitySettings } = useElectricitySettings()

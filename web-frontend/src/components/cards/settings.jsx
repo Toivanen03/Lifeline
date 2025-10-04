@@ -1,14 +1,13 @@
-import ClockSettings from "../settings/widgetSettings/ClockSettings"
-import ElectricitySettings from "../settings/widgetSettings/ElectricitySettings"
-import CalendarSettings from "../settings/widgetSettings/CalendarSettings"
+import ClockSettings from "../settings/ClockSettings"
+import ElectricitySettings from "../settings/ElectricitySettings"
+import CalendarSettings from "../settings/CalendarSettings"
 import { useCalendarSettings } from "../../contexts/CalendarContext"
 import { useSettings } from "../../contexts/SettingsContext"
 import { useClockSettings } from "../../contexts/ClockContext"
 import { useElectricitySettings } from "../../contexts/ElectricityContext"
 import UserSettings from "../settings/UserSettings"
-import { AuthContext } from "../../contexts/AuthContext"
 import { motion } from "framer-motion"
-import { useEffect, useContext } from "react"
+import { useEffect } from "react"
 
 const Settings = ({ notify }) => {
     const { mainSettings, updateMainSettings } = useSettings()
@@ -48,13 +47,14 @@ const Settings = ({ notify }) => {
             className="d-flex justify-content-center align-items-start mt-5"
             >
             <div
-                className="card shadow-lg"
+                className="card shadow-lg p-2"
                 style={{
                 border: '1px solid black',
                 borderRadius: 20,
                 backgroundColor: 'white',
-                width: '70%',
-                maxHeight: '100%',
+                width: '80%',
+                maxHeight: '80vh',
+                overflow: 'hidden'
                 }}
             >
                 <div className="card-body overflow-auto">

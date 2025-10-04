@@ -1,7 +1,7 @@
-import { NOTIFICATION_SETTINGS } from "../../../schema/queries"
+import { NOTIFICATION_SETTINGS } from "../../schema/queries"
 import { useQuery } from "@apollo/client/react"
 
-const NotificationSettings = ({ type, title, updateNotificationSettings, currentUser, familyMembers }) => {
+const FamilyNotificationSettings = ({ type, title, updateNotificationSettings, currentUser, familyMembers }) => {
   const { data: settingsData, refetch: refetchSettings } = useQuery(NOTIFICATION_SETTINGS, {
     skip: !currentUser
   })
@@ -112,4 +112,4 @@ const NotificationSettings = ({ type, title, updateNotificationSettings, current
   )
 }
 
-export default NotificationSettings
+export default FamilyNotificationSettings

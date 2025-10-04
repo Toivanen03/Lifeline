@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form"
 import { useMutation, useLazyQuery } from "@apollo/client/react"
 import { LOGIN, USER_BY_EMAIL, RESEND_EMAIL_VERIFICATION_TOKEN } from "../schema/queries"
-import { useContext, useState, useEffect } from "react"
+import { useContext, useState } from "react"
 import { AuthContext } from "../contexts/AuthContext"
 import { useNavigate } from "react-router-dom"
 
@@ -17,10 +17,6 @@ const Login = ({ notify }) => {
 
     const navigate = useNavigate()
 
-    useEffect(() => {
-
-    }, [userExists])
-
     const onSubmit = async (formData) => {
         setEmailForResend(formData.userName)
         try {
@@ -34,9 +30,9 @@ const Login = ({ notify }) => {
             const token = response?.data?.login?.value
 
             if (token) {
+                notify('Tervetuloa Lifelineen!', 'success')
                 login(token, stayLoggedIn)
                 reset()
-                notify('Tervetuloa Lifelineen!', 'success')
             } else {
                 const { data } = await getUserByEmail({
                     variables: {

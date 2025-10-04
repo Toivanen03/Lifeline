@@ -144,7 +144,8 @@ const resolvers = {
           parent: m.parent,
           emailVerified: m.emailVerified,
           familyId: m.familyId?.toString(),
-          notificationPermissions: m.notificationPermissions
+          notificationPermissions: m.notificationPermissions,
+          owner: family.owner._id.toString() === m._id.toString()
         }))
       }
     },
@@ -163,6 +164,10 @@ const resolvers = {
         throw new Error("Ei valtuuksia nähdä tätä käyttäjää")
       }
       return user
+    },
+
+    invitedUsers: async (_root, { familyId }) => {
+      return await InvitedUser.find({ familyId })
     },
 
     weather: async (_, { lat, lon, city }) => {
@@ -238,7 +243,7 @@ const resolvers = {
 
     createUser: async (_root, { username, password, name, parent, familyId, invitedUserId }) => {
       try {
-        createUserSchema.parse({ username, password, name, parent })
+        createUserSchema.parse({ username, password, name, parent, familyId, invitedUserId })
       } catch (err) {
         if (err instanceof z.ZodError) {
           const errors = err.errors.map(e => e.message).join('\n')
@@ -268,12 +273,10 @@ const resolvers = {
           settings[cat].push({ userId: user._id, enabled: true, canManage: true })
         })
         await settings.save()
-console.log("IUID", invitedUserId)
 
         if (invitedUserId) {
           const invitedUser = await InvitedUser.findById(invitedUserId)
-console.log("IU", invitedUser)
-console.log("FID:", familyId)
+
           if (invitedUser && invitedUser.familyId.toString() === familyId.toString()) {
             await invitedUser.deleteOne()
           }
@@ -323,6 +326,7 @@ console.log("FID:", familyId)
 
       user.emailVerificationToken = emailVerificationToken
       user.emailVerificationTokenExpiry = new Date(Date.now() + expiry)
+      user.owner = true
       await user.save()
 
       await MailSender(user, emailVerificationToken, 'confirm-email')
@@ -335,6 +339,25 @@ console.log("FID:", familyId)
           process.env.JWT_SECRET
         )
       }
+    },
+
+    updateParent: async (_root, { userId, parent }, context) => {
+      const currentUser = context.currentUser
+
+      if (!currentUser || !currentUser.parent) {
+        throw new Error("Ei valtuuksia muuttaa käyttäjää")
+      }
+
+      const user = await User.findById(userId)
+      if (!user) throw new Error("Käyttäjää ei löytynyt")
+      if (user.familyId.toString() !== currentUser.familyId.toString()) {
+        throw new Error("Ei valtuuksia muuttaa tämän käyttäjän asetuksia")
+      }
+
+      user.parent = parent
+      await user.save()
+
+      return user
     },
 
     login: async (_root, { username, password }) => {
@@ -370,6 +393,16 @@ console.log("FID:", familyId)
 
       await User.findByIdAndDelete(id)
       return deletedUser
+    },
+
+    cancelInvitation: async (_root, { id }, context) => {
+      requireParent(context.currentUser)
+
+      const canceledUser = await User.findById(id)
+      if (!canceledUser) throw new Error("Käyttäjää ei löytynyt")
+
+      await User.findByIdAndDelete(id)
+      return canceledUser
     },
 
     requestPasswordReset: async (_root, { email }) => {
@@ -484,7 +517,7 @@ console.log("FID:", familyId)
     },
 
     deleteFamily: async (_root, { familyId }, context) => {
-      if (!context.currentUser || !context.currentUser.parent) {
+      if (!context.currentUser || !context.currentUser.owner) {
         throw new Error("Ei oikeuksia")
       }
 

@@ -7,6 +7,7 @@ const invitedUserSchema = new mongoose.Schema({
   parent: { type: Boolean, default: false },
   emailVerified: { type: Boolean, default: false },
   familyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Family' },
+  familyName: { type: String, required: false }
   
 }, { timestamps: true })
 

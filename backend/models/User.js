@@ -5,6 +5,7 @@ const userSchema = new mongoose.Schema({
   passwordHash: { type: String, required: true },
   parent: { type: Boolean, required: true },
   name: { type: String, required: true },
+  owner: { type: Boolean, default: false },
   resetToken: String,
   resetTokenExpiry: Date,
   token: String,

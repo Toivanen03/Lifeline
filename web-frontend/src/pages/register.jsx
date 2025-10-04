@@ -1,32 +1,26 @@
 import { useForm } from "react-hook-form"
 import { useMutation } from "@apollo/client/react"
 import { ADD_USER } from "../schema/queries"
-import { useState, useEffect, useContext } from "react"
+import { useState, useEffect } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { updatePasswordSchema, validateFullName, validateEmail } from "../../../mobile-app/schema/validateUserData"
-import { AuthContext } from "../contexts/AuthContext"
 
 const Register = ({ notify }) => {
     const { state } = useLocation()
-    const { logout, isLoggedIn } = useContext(AuthContext)
     const navigate = useNavigate()
     const [seconds, setSeconds] = useState(null)
     const [createUser] = useMutation(ADD_USER)
     const { register, handleSubmit, watch } = useForm({
         defaultValues: {
         userName: state?.username || state?.invitedUser?.email || "",
-        password: state?.password || ""
+        password: state?.password || "",
+        lastname: state?.invitedUser?.familyName || ""
         }
     })
 
     const invited = !!state?.invitedUser
     const familyId = state?.invitedUser?.familyId
-
-    useEffect(() => {
-    if (isLoggedIn) {
-        logout()
-    }
-    }, [isLoggedIn, logout])
+    const inviteId = state?.invitedUser?.id
     
     const consent = watch("consent")
 
@@ -76,7 +70,7 @@ const Register = ({ notify }) => {
                         username: formData.userName,
                         name: name,
                         password: formData.password,
-                    parent: true,
+                        parent: true,
                     }
                 })
 
@@ -99,7 +93,7 @@ const Register = ({ notify }) => {
                         password: formData.password,
                         parent: state?.invitedUser?.parent || false,
                         familyId,
-                        invitedUserId: state?.invitedUser?.id || null
+                        invitedUserId: inviteId
                     }
                 })
                 if (response) {

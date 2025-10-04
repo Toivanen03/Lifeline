@@ -29,26 +29,27 @@ router.post('/lifeline-invitation', authMiddleware, async (req, res) => {
 
   try {
     const results = await Promise.all(invitedUsers.map(async userObj => {
-        const { email, parent, familyId } = userObj
+      const { email, parent, familyId } = userObj
 
-        let invitedUser = await InvitedUser.findOne({ username: email })
-        if (!invitedUser) {
-            invitedUser = new InvitedUser({ username: email, familyId })
-        }
-        const invitationToken = jwt.sign({ id: invitedUser._id }, process.env.JWT_SECRET)
-        invitedUser.invitationToken = invitationToken
-        invitedUser.invitationTokenExpiry = new Date(Date.now() + expiry)
-        invitedUser.parent = parent
-        await invitedUser.save()
-        await MailSender(
-            { 
-                ...invitedUser.toObject(), 
-                invitedByName: currentUser.name
-            },
+      let invitedUser = await InvitedUser.findOne({ username: email })
+      if (!invitedUser) {
+        invitedUser = new InvitedUser({ username: email, familyId })
+      }
+      const invitationToken = jwt.sign({ id: invitedUser._id }, process.env.JWT_SECRET)
+      invitedUser.invitationToken = invitationToken
+      invitedUser.invitationTokenExpiry = new Date(Date.now() + expiry)
+      invitedUser.parent = parent
+      invitedUser.familyName = currentUser.name.split(' ')[1]
+      await invitedUser.save()
+      await MailSender(
+        { 
+          ...invitedUser.toObject(), 
+          invitedByName: currentUser.name
+        },
     invitationToken,
     'lifeline-invitation'
 )
-        return email
+      return email
     }))
 
     res.json({ message: `Kutsut lähetetty: ${results.join(', ')}` })
@@ -66,7 +67,7 @@ router.post('/accept-invitation', async (req, res) => {
     const invitedUser = await InvitedUser.findById(decoded.id)
 
     if (!invitedUser) {
-      return res.status(400).json({ error: 'Käyttäjää ei löytynyt.' })
+      return res.status(400).json({ error: 'Käyttäjää ei löytynyt tai kutsu ei ole enää voimassa.' })
     }
 
     if (invitedUser.invitationToken !== invitationToken || invitedUser.invitationTokenExpiry < new Date()) {
@@ -81,10 +82,11 @@ router.post('/accept-invitation', async (req, res) => {
     res.json({ 
       message: 'Kutsu hyväksytty onnistuneesti.',
       invitedUser: {
-        id: invitedUser._id,
+        id: invitedUser._id.toString(),
         email: invitedUser.username,
         parent: invitedUser.parent,
-        familyId: invitedUser.familyId
+        familyId: invitedUser.familyId,
+        familyName: invitedUser.familyName
       }
     })
   } catch (err) {

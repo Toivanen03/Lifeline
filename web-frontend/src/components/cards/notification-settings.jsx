@@ -1,11 +1,11 @@
 import { useMutation } from '@apollo/client/react'
 import { UPDATE_NOTIFICATION_SETTINGS } from '../../schema/queries'
-import NotificationSettings from '../settings/notificationSettings/notificationSettings'
+import FamilyNotificationSettings from '../settings/notificationSettings'
 import { AuthContext } from '../../contexts/AuthContext'
 import { useContext } from 'react'
 import { motion } from "framer-motion"
 
-const Family = ({ familyMembers }) => {
+const NotificationSettings = ({ familyMembers }) => {
   const { currentUser } = useContext(AuthContext)
   const [updateNotificationSettings] = useMutation(UPDATE_NOTIFICATION_SETTINGS)
 
@@ -30,7 +30,7 @@ const Family = ({ familyMembers }) => {
           <h4 className='mb-4'>Ilmoitusasetukset</h4>
           <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
           {notificationTypes.map(n => (
-            <NotificationSettings
+            <FamilyNotificationSettings
               key={n.type}
               type={n.type}
               title={n.title}
@@ -45,4 +45,4 @@ const Family = ({ familyMembers }) => {
   )
 }
 
-export default Family
+export default NotificationSettings

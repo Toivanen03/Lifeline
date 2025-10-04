@@ -44,14 +44,16 @@ export const ADD_USER = gql`
     $name: String!, 
     $password: String!, 
     $parent: Boolean!, 
-    $familyId: ID
+    $familyId: ID,
+    $invitedUserId: ID
   ) {
     createUser(
       username: $username, 
       name: $name, 
       password: $password, 
       parent: $parent,
-      familyId: $familyId
+      familyId: $familyId,
+      invitedUserId: $invitedUserId
     ) {
       id
       username
@@ -88,7 +90,9 @@ export const FAMILY = gql`
       members {
         id
         name
+        username
         parent
+        owner
         notificationPermissions {
           electricity
           calendar
@@ -109,6 +113,7 @@ export const USERS = gql`
       username
       name
       emailVerified
+      owner
       notificationPermissions {
         electricity
         calendar
@@ -225,6 +230,24 @@ export const DELETE_USER = gql`
   }
 `
 
+export const CANCEL_INVITATION = gql`
+  mutation cancelInvitation($id: ID!) {
+    cancelInvitation(id: $id) {
+      id
+    }
+  }
+`
+
+export const GET_INVITED_USERS = gql`
+  query invitedUsers($familyId: ID!) {
+    invitedUsers(familyId: $familyId) {
+      id
+      username
+      invitationTokenExpiry
+    }
+  }
+`
+
 export const DELETE_FAMILY = gql`
   mutation deleteFamily($familyId: ID!) {
     deleteFamily(familyId: $familyId)
@@ -235,6 +258,15 @@ export const UPDATE_PASSWORD = gql`
   mutation UpdatePassword($newPassword: String, $token: String) {
     updatePassword(newPassword: $newPassword, token: $token) {
       id
+    }
+  }
+`
+
+export const UPDATE_PARENT = gql`
+  mutation updateParent($userId: ID!, $parent: Boolean!) {
+    updateParent(userId: $userId, parent: $parent) {
+      id
+      parent
     }
   }
 `

@@ -15,5 +15,8 @@ export const createUserSchema = z.object({
   parent: z.boolean(),
   familyId: z.string()
     .optional()
-    .refine(val => !val || objectIdRegex.test(val), '\n- Epäkelpo familyId')
+    .refine(val => !val || objectIdRegex.test(val), '\n- Epäkelpo familyId'),
+  invitedUserId: z.string()
+    .optional()
+    .refine(val => !val || objectIdRegex.test(val), '\n- Epäkelpo invitedUserId')
 })

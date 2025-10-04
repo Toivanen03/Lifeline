@@ -1,9 +1,13 @@
-import { useCalendarSettings } from "../../../contexts/CalendarContext"
-import { useSettings } from "../../../contexts/SettingsContext"
+import { useCalendarSettings } from "../../contexts/CalendarContext"
+import { useSettings } from "../../contexts/SettingsContext"
+import WilmaLogo from '../../assets/Wilma_logo.png'
+import { useContext } from "react"
+import { AuthContext } from "../../contexts/AuthContext"
 
 const CalendarSettings = () => {
   const { calendarSettings, updateCalendarSettings } = useCalendarSettings()
   const { mainSettings } = useSettings()
+  const { currentUser } = useContext(AuthContext)
 
   const toggle = (field) => {
     const newState = { ...calendarSettings, [field]: !calendarSettings[field] }
@@ -44,6 +48,13 @@ const CalendarSettings = () => {
           </div>
         ))}
       </>
+      {currentUser.parent &&
+        <div className="col-7 d-flex justify-content-between align-items-center mb-3">
+          <strong className="ms-4">Tuo lukujärjestyksiä</strong>
+          <button className="btn btn-info">
+            <img src={WilmaLogo} alt="Wilma logo" width={'40px'} /> - integraatio
+          </button>
+        </div>}
     </>
   )
 }
