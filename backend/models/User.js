@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema({
   emailVerificationToken: String,
   emailVerificationTokenExpiry: { type: Date },
   familyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Family' },
+  birthday: { type: Date, required: false},
 
   notificationPermissions: {
     electricity: { type: Boolean, default: false },

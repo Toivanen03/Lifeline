@@ -11,12 +11,14 @@ import WeatherInfo from "./cards/weatherInfo"
 import Forecast from "./cards/forecast"
 import CalendarFull from "./cards/calendar"
 import MealMenus from "./cards/mealmenus"
+import FamilyMember from "./cards/familyMember"
 
 const Cards = ({ notify, familyMembers, firstname }) => {
 
     return (
         <>
             <Route path="/family" element={<Family notify={notify} familyMembers={familyMembers} />} />
+            <Route path="/family/:id" element={<FamilyMember notify={notify} familyMembers={familyMembers} />} />
             <Route path="/shoppinglist" element={<ShoppingList notify={notify} />} />
             <Route path="/mealmenus" element={<MealMenus notify={notify} />} />
             <Route path="/settings" element={<Settings notify={notify} />} />

@@ -24,6 +24,7 @@ const typeDefs = gql`
     parent: Boolean!
     owner: Boolean
     name: String!
+    birthday: String
     resetToken: String
     resetTokenExpiry: String
     token: String
@@ -104,6 +105,7 @@ const typeDefs = gql`
     familyId: ID!
     name: String!
     owner: User!
+    birthday: String
     members: [User!]!
   }
 
@@ -144,6 +146,7 @@ const typeDefs = gql`
     updateNotificationSettings(familyId: ID, userId: ID!, type: String!, enabled: Boolean, canManage: Boolean): UserSettingEntry
     resendEmailVerificationToken(email: String!): Boolean
     updateParent(userId: ID!, parent: Boolean!): User
+    updateBirthday(userId: ID!, birthday: String): User
   }
 `
 

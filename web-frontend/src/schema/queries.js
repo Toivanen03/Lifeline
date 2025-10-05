@@ -93,6 +93,7 @@ export const FAMILY = gql`
         username
         parent
         owner
+        birthday
         notificationPermissions {
           electricity
           calendar
@@ -114,6 +115,7 @@ export const USERS = gql`
       name
       emailVerified
       owner
+      birthday
       notificationPermissions {
         electricity
         calendar
@@ -267,6 +269,19 @@ export const UPDATE_PARENT = gql`
     updateParent(userId: $userId, parent: $parent) {
       id
       parent
+    }
+  }
+`
+
+export const ADD_BIRTHDAY = gql`
+  mutation updateBirthday($userId: ID!, $birthday: String) {
+    updateBirthday(userId: $userId, birthday: $birthday) {
+      id
+      username
+      parent
+      name
+      owner
+      birthday
     }
   }
 `

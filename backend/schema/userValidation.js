@@ -4,7 +4,6 @@ const objectIdRegex = /^[0-9a-fA-F]{24}$/
 
 export const createUserSchema = z.object({
   username: z
-    .string()
     .email('\n- Käyttäjätunnuksen on oltava kelvollinen sähköpostiosoite'),
   password: z.string()
     .min(8, '\n- Salasanan on oltava vähintään 8 merkkiä pitkä')
@@ -18,5 +17,7 @@ export const createUserSchema = z.object({
     .refine(val => !val || objectIdRegex.test(val), '\n- Epäkelpo familyId'),
   invitedUserId: z.string()
     .optional()
-    .refine(val => !val || objectIdRegex.test(val), '\n- Epäkelpo invitedUserId')
+    .refine(val => !val || objectIdRegex.test(val), '\n- Epäkelpo invitedUserId'),
+  birthday: z.date()
+    .optional()
 })

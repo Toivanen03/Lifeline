@@ -4,7 +4,8 @@ import { useQuery, useMutation } from "@apollo/client/react"
 import { validateEmail } from "../../schema/validateUserData"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons'
-import { motion } from "framer-motion"
+import { hover, motion } from "framer-motion"
+import { useNavigate } from "react-router-dom"
 import { GET_INVITED_USERS, UPDATE_PARENT, DELETE_USER, CANCEL_INVITATION } from "../../schema/queries"
 
 const Family = ({ notify, familyMembers }) => {
@@ -19,6 +20,8 @@ const Family = ({ notify, familyMembers }) => {
     const maxLength = 10
     const familyId = currentUser.familyId
 
+    const navigate = useNavigate()
+
     const { data: invitedData, refetch: refetchInvited } = useQuery(GET_INVITED_USERS, {
         variables: { familyId: currentUser.familyId }
     })
@@ -30,21 +33,26 @@ const Family = ({ notify, familyMembers }) => {
     }, [invitedData])
 
     const tryAddEmail = (rawEmail) => {
-        console.log(familyMembers)
         const trimmed = rawEmail.trim().toLowerCase()
         if (!trimmed) return false
-        if (familyMembersToInvite.some(u => u.email === trimmed)) {
-            notify("Antamasi käyttäjä on jo lisätty kutsuttavien listaan.", "info")
+        if ((familyMembersToInvite.length + invitedList.length + familyMembers.length) < 10) {
+            if (familyMembersToInvite.some(u => u.email === trimmed)) {
+                notify("Antamasi käyttäjä on jo lisätty kutsuttavien listaan.", "info")
+                setEmail("")
+                return false
+            } else if (invitedList.some(u => u.username === trimmed)) {
+                notify("Antamasi käyttäjä on jo kutsuttu perheeseen.", "info")
+                setEmail("")
+                return false
+            } else if (familyMembers.some(u => u.username === trimmed)) {
+                notify("Antamasi käyttäjä kuuluu jo perheeseen.", "info")
+                setEmail("")
+                return false
+            }
+        } else {
+            notify("Olet jo lisännyt maksimimäärän käyttäjiä!", "error")
             setEmail("")
-            return false
-        } else if (invitedList.some(u => u.username === trimmed)) {
-            notify("Antamasi käyttäjä on jo kutsuttu perheeseen.", "info")
-            setEmail("")
-            return false
-        } else if (familyMembers.some(u => u.username === trimmed)) {
-            notify("Antamasi käyttäjä kuuluu jo perheeseen.", "info")
-            setEmail("")
-            return false
+            return false  
         }
 
         if (familyMembersToInvite.length >= maxLength) {
@@ -159,6 +167,10 @@ const Family = ({ notify, familyMembers }) => {
                 notify(`VIRHE: ${err}`, "error")
             }
         }
+    }
+
+    const openUser = (user) => {
+        navigate(`/family/${user.id}`)
     }
 
     return (
@@ -282,17 +294,20 @@ const Family = ({ notify, familyMembers }) => {
                     </div>}
 
                     <div className={invitedList?.length > 0 ? ("col-6 p-0 text-start") : ("col-12 p-0 text-center")}>
-                        <h5 className="mb-3">Perheenjäsenet:</h5>
-                        <div className={invitedList?.length > 0 ? ("col-7 ms-2 text-end") : ("col-7 ms-4 text-end")}><small>Vanhempi:</small></div>
+                        <h5 className="mb-3">Perheenjäsenet</h5>
+                        <div className="row">
+                            <div className={invitedList?.length > 0 ? ("col-5 text-start") : ("col-4 offset-1 text-center")}><small>Tarkastele klikkaamalla:</small></div>
+                            <div className={invitedList?.length > 0 ? ("col-6 ms-3 text-start") : ("col-3 ms-4 text-center")}><small>Vanhempi:</small></div>
+                        </div>
                         {familyMembersList?.map((user) => (
                             <div key={user.id} className="row mt-2">
-                                <div className="col-6">
+                                <div className="col-6" style={{cursor: "pointer"}}>
                                     {!currentUser.owner && user.owner ? (
-                                        <span className={user.owner && !currentUser.isOwner ? "text-danger" : ""}>
-                                            {user.owner && !currentUser.isOwner ? (<b>Pääkäyttäjä {user.name}</b>) : (user.name.split(' ')[0])}
+                                        <span onClick={() => openUser(user)} className={user.owner && !currentUser.isOwner ? "text-danger" : ""}>
+                                            <b>{user.owner && !currentUser.isOwner ? (<b>Pääkäyttäjä {user.name}</b>) : (user.name.split(' ')[0])}</b>
                                         </span>
                                     ) : (
-                                        !user.owner && user.name.split(" ")[0]
+                                        !user.owner && <span onClick={() => openUser(user)}><b>{user.name.split(" ")[0]}</b></span>
                                     )}
                                 </div>
                                 <div className="col-2">
@@ -322,7 +337,7 @@ const Family = ({ notify, familyMembers }) => {
                 <div className="w-100">
                     <h4 className="mb-4">Perheenjäsenet:</h4>
                     {familyMembers.map(u => 
-                        <div className="row text-center" key={u.id}>
+                        <div className="row text-center" key={u.id} onClick={() => openUser(u)} style={{cursor: "pointer"}}>
                             <div className="col-4">
                                 <span className={u.owner ? "text-danger" : u.parent ? "text-info" : ""}>{u.name}</span>
                             </div>

@@ -25,7 +25,7 @@ import { CalendarSettingsProvider } from './contexts/CalendarContext'
 import { CalendarDayProvider } from './contexts/CalendarDayContext'
 
 function App() {
-  const [getFamily, { data: familyData }] = useLazyQuery(FAMILY, { fetchPolicy: "network-only" });
+  const [getFamily, { data: familyData }] = useLazyQuery(FAMILY, { fetchPolicy: "network-only" })
   const { isLoggedIn, logout, isLoading, currentUser } = useContext(AuthContext)
   const navigate = useNavigate()
   const shownMessages = useRef(new Set())

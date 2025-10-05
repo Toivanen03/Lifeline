@@ -145,7 +145,8 @@ const resolvers = {
           emailVerified: m.emailVerified,
           familyId: m.familyId?.toString(),
           notificationPermissions: m.notificationPermissions,
-          owner: family.owner._id.toString() === m._id.toString()
+          owner: family.owner._id.toString() === m._id.toString(),
+          birthday: m.birthday
         }))
       }
     },
@@ -360,6 +361,22 @@ const resolvers = {
       return user
     },
 
+    updateBirthday: async (_root, { userId, birthday }, context) => {
+      const currentUser = context.currentUser
+
+      if (!currentUser || !currentUser.parent) {
+        throw new GraphQLError("Ei valtuuksia muuttaa käyttäjää")
+      }
+
+      const user = await User.findById(userId)
+      if (!user) throw new GraphQLError("Käyttäjää ei löytynyt")
+
+      user.birthday = birthday
+
+      await user.save()
+      return user
+    },
+
     login: async (_root, { username, password }) => {
       const user = await User.findOne({ username: username.toLowerCase().trim() })
       if (!user) throw new Error("Käyttäjää ei löytynyt")
@@ -398,10 +415,10 @@ const resolvers = {
     cancelInvitation: async (_root, { id }, context) => {
       requireParent(context.currentUser)
 
-      const canceledUser = await User.findById(id)
+      const canceledUser = await InvitedUser.findById(id)
       if (!canceledUser) throw new Error("Käyttäjää ei löytynyt")
 
-      await User.findByIdAndDelete(id)
+      await InvitedUser.findByIdAndDelete(id)
       return canceledUser
     },
 
