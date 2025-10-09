@@ -14,22 +14,6 @@ const userSchema = new mongoose.Schema({
   emailVerificationTokenExpiry: { type: Date },
   familyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Family' },
   birthday: { type: Date, required: false},
-
-  notificationPermissions: {
-    electricity: { type: Boolean, default: false },
-    calendar: { type: Boolean, default: false },
-    shopping: { type: Boolean, default: false },
-    todo: { type: Boolean, default: false },
-    chores: { type: Boolean, default: false }
-  },
-
-  canManageOwnNotifications: {
-    electricity: { type: Boolean, default: true },
-    calendar: { type: Boolean, default: true },
-    shopping: { type: Boolean, default: true },
-    todo: { type: Boolean, default: true },
-    chores: { type: Boolean, default: true }
-  },
 }, { timestamps: true })
 
 export default mongoose.model('User', userSchema)

@@ -1,7 +1,7 @@
 import { createContext, useState, useEffect, useContext } from "react"
 import { AuthContext } from "./AuthContext"
 
-const CalendarContext = createContext()
+const CalendarWidgetContext = createContext()
 
 const defaultSettings = {
   show: true,
@@ -41,10 +41,10 @@ export const CalendarSettingsProvider = ({ children }) => {
   if (!initialized) return null
 
   return (
-    <CalendarContext.Provider value={{ calendarSettings, updateCalendarSettings }}>
+    <CalendarWidgetContext.Provider value={{ calendarSettings, updateCalendarSettings }}>
       {children}
-    </CalendarContext.Provider>
+    </CalendarWidgetContext.Provider>
   )
 }
 
-export const useCalendarSettings = () => useContext(CalendarContext)
+export const useCalendarSettings = () => useContext(CalendarWidgetContext)

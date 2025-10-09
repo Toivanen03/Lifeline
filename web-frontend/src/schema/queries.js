@@ -21,6 +21,18 @@ export const GET_FLAGDAYS = gql`
   }
 `
 
+export const GET_IRREGULAR_FLAGDAYS = gql`
+  query irregularFlagDays($year: String) {
+    irregularFlagDays(year: $year) {
+      date
+      name
+      description
+      official
+      links
+    }
+  }
+`
+
 export const RESEND_EMAIL_VERIFICATION_TOKEN = gql`
   mutation ResendEmailVerificationToken($email: String!) {
     resendEmailVerificationToken(email: $email)
@@ -95,11 +107,12 @@ export const FAMILY = gql`
         owner
         birthday
         notificationPermissions {
-          electricity
-          calendar
-          shopping
-          todo
-          chores
+          wilma { enabled canManage mobileNotifications }
+          electricity { enabled canManage mobileNotifications }
+          calendar { enabled canManage mobileNotifications }
+          shopping { enabled canManage mobileNotifications }
+          todo { enabled canManage mobileNotifications }
+          chores { enabled canManage mobileNotifications }
         }
       }
     }
@@ -117,11 +130,12 @@ export const USERS = gql`
       owner
       birthday
       notificationPermissions {
-        electricity
-        calendar
-        shopping
-        todo
-        chores
+        wilma { enabled canManage mobileNotifications }
+        electricity { enabled canManage mobileNotifications }
+        calendar { enabled canManage mobileNotifications }
+        shopping { enabled canManage mobileNotifications }
+        todo { enabled canManage mobileNotifications }
+        chores { enabled canManage mobileNotifications }
       }
     }
   }
@@ -165,6 +179,7 @@ export const UPDATE_NOTIFICATION_SETTINGS = gql`
     $type: String!, 
     $enabled: Boolean, 
     $canManage: Boolean
+    $mobileNotifications: Boolean
   ) {
     updateNotificationSettings(
       familyId: $familyId, 
@@ -172,10 +187,12 @@ export const UPDATE_NOTIFICATION_SETTINGS = gql`
       type: $type, 
       enabled: $enabled, 
       canManage: $canManage
+      mobileNotifications: $mobileNotifications
     ) {
       userId
       enabled
       canManage
+      mobileNotifications
     }
   }
 `
@@ -268,7 +285,11 @@ export const UPDATE_PARENT = gql`
   mutation updateParent($userId: ID!, $parent: Boolean!) {
     updateParent(userId: $userId, parent: $parent) {
       id
+      username
       parent
+      name
+      owner
+      birthday
     }
   }
 `
@@ -290,31 +311,160 @@ export const NOTIFICATION_SETTINGS = gql`
   query NotificationSettings {
     notificationSettings {
       familyId
+      wilma {
+        userId
+        enabled
+        canManage
+        mobileNotifications
+      }
       electricity {
         userId
         enabled
         canManage
+        mobileNotifications
       }
       calendar {
         userId
         enabled
         canManage
+        mobileNotifications
       }
       shopping {
         userId
         enabled
         canManage
+        mobileNotifications
       }
       todo {
         userId
         enabled
         canManage
+        mobileNotifications
       }
       chores {
         userId
         enabled
         canManage
+        mobileNotifications
       }
     }
+  }
+`
+
+export const ACCESS_RULES = gql`
+  query accessRules($resourceType: String!, $resourceId: ID!, $creatorId: ID!) {
+    accessRules(resourceType: $resourceType, resourceId: $resourceId, creatorId: $creatorId) {
+      id
+      resourceType
+      resourceId
+      userId
+      canView
+    }
+  }
+`
+
+export const USER_ACCESS_RULE = gql`
+  query userAccessRule($resourceType: String!, $resourceId: ID!, $userId: ID!, $creatorId: ID!) {
+    userAccessRule(resourceType: $resourceType, resourceId: $resourceId, userId: $userId, creatorId: $creatorId) {
+      id
+      resourceType
+      resourceId
+      userId
+      canView
+    }
+  }
+`
+
+export const UPSERT_ACCESS_RULE = gql`
+  mutation upsertAccessRule(
+    $resourceType: String!
+    $resourceId: ID!
+    $userId: ID!
+    $canView: Boolean
+  ) {
+    upsertAccessRule(
+      resourceType: $resourceType
+      resourceId: $resourceId
+      userId: $userId
+      canView: $canView
+    ) {
+      id
+      resourceType
+      resourceId
+      userId
+      canView
+    }
+  }
+`
+
+export const DELETE_ACCESS_RULE = gql`
+  mutation deleteAccessRule($id: ID!) {
+    deleteAccessRule(id: $id)
+  }
+`
+
+export const CALENDAR_ENTRIES = gql`
+  query calendarEntries($familyId: ID!) {
+    calendarEntries(familyId: $familyId) {
+      id
+      familyId
+      creatorId
+      title
+      details
+      start
+      end
+      allDay
+      viewUserIds
+    }
+  }
+`
+
+export const CALENDAR_ENTRY = gql`
+  query calendarEntry($id: ID!) {
+    calendarEntry(id: $id) {
+      id
+      familyId
+      creatorId
+      title
+      details
+      start
+      end
+      allDay
+      viewUserIds
+    }
+  }
+`
+
+export const CREATE_CALENDAR_ENTRY = gql`
+  mutation createCalendarEntry($familyId: ID!, $input: CalendarEntryInput!) {
+    createCalendarEntry(familyId: $familyId, input: $input) {
+      id
+      title
+      details
+      start
+      end
+      allDay
+      viewUserIds
+    }
+  }
+`
+
+export const UPDATE_CALENDAR_ENTRY = gql`
+  mutation updateCalendarEntry($id: ID!, $input: CalendarEntryInput!) {
+    updateCalendarEntry(id: $id, input: $input) {
+      id
+      title
+      details
+      start
+      end
+      allDay
+      viewUserIds
+    }
+  }
+`
+
+export const DELETE_CALENDAR_ENTRY = gql`
+  mutation deleteCalendarEntry($id: ID!) {
+    deleteCalendarEntry(id: $id)
   }
 `

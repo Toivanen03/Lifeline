@@ -16,7 +16,7 @@ import { validateEmail } from '../schema/validateUserData'
 WebBrowser.maybeCompleteAuthSession()
 
 export default function Email({ notify }) {
-    const [getUserByEmail, { loading, data, error }] = useLazyQuery(USER_BY_EMAIL)
+    const [getUserByEmail, { loading }] = useLazyQuery(USER_BY_EMAIL)
     const { control, handleSubmit } = useForm()
     const { login } = useContext(AuthContext)
     const navigation = useNavigation()

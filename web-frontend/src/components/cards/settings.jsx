@@ -1,7 +1,7 @@
 import ClockSettings from "../settings/ClockSettings"
 import ElectricitySettings from "../settings/ElectricitySettings"
 import CalendarSettings from "../settings/CalendarSettings"
-import { useCalendarSettings } from "../../contexts/CalendarContext"
+import { useCalendarSettings } from "../../contexts/CalendarWidgetContext"
 import { useSettings } from "../../contexts/SettingsContext"
 import { useClockSettings } from "../../contexts/ClockContext"
 import { useElectricitySettings } from "../../contexts/ElectricityContext"

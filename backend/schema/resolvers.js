@@ -7,6 +7,9 @@ import InvitedUser from '../models/InvitedUser.js'
 import GlobalNamedayEntries from '../models/GlobalNamedayEntries.js'
 import GlobalFlagdayEntries from '../models/GlobalFlagdayEntries.js'
 import NotificationSettings from '../models/Notification.js'
+import AccessRule from '../models/AccessManagement.js'
+import CalendarEntry from '../models/CalendarEntry.js'
+import { calculateFlagDays } from '../data/flagDays/calculateVariableFlagdays.js'
 import { createUserSchema } from './userValidation.js'
 import { GraphQLError } from 'graphql'
 import { z } from 'zod'
@@ -37,31 +40,41 @@ const requireParent = (user) => {
   }
 }
 
-const categories = ['electricity','calendar','shopping','todo','chores']
+const categories = ['wilma', 'electricity','calendar','shopping','todo','chores']
 
 const attachNotificationSettings = (users, settings) => {
   return users.map(user => {
     const perms = settings
       ? {
+          wilma: {
+            enabled: settings.wilma.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false,
+            canManage: settings.wilma.find(e => e.userId.toString() === user._id.toString())?.canManage ?? true,
+            mobileNotifications: settings.wilma.find(e => e.userId.toString() === user._id.toString())?.mobileNotifications ?? true
+          },
           electricity: {
             enabled: settings.electricity.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false,
-            canManage: settings.electricity.find(e => e.userId.toString() === user._id.toString())?.canManage ?? true
+            canManage: settings.electricity.find(e => e.userId.toString() === user._id.toString())?.canManage ?? true,
+            mobileNotifications: settings.electricity.find(e => e.userId.toString() === user._id.toString())?.mobileNotifications ?? true
           },
           calendar: {
             enabled: settings.calendar.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false,
-            canManage: settings.calendar.find(e => e.userId.toString() === user._id.toString())?.canManage ?? true
+            canManage: settings.calendar.find(e => e.userId.toString() === user._id.toString())?.canManage ?? true,
+            mobileNotifications: settings.calendar.find(e => e.userId.toString() === user._id.toString())?.mobileNotifications ?? true
           },
           shopping: {
             enabled: settings.shopping.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false,
-            canManage: settings.shopping.find(e => e.userId.toString() === user._id.toString())?.canManage ?? true
+            canManage: settings.shopping.find(e => e.userId.toString() === user._id.toString())?.canManage ?? true,
+            mobileNotifications: settings.shopping.find(e => e.userId.toString() === user._id.toString())?.mobileNotifications ?? true
           },
           todo: {
             enabled: settings.todo.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false,
-            canManage: settings.todo.find(e => e.userId.toString() === user._id.toString())?.canManage ?? true
+            canManage: settings.todo.find(e => e.userId.toString() === user._id.toString())?.canManage ?? true,
+            mobileNotifications: settings.todo.find(e => e.userId.toString() === user._id.toString())?.mobileNotifications ?? true
           },
           chores: {
             enabled: settings.chores.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false,
-            canManage: settings.chores.find(e => e.userId.toString() === user._id.toString())?.canManage ?? true
+            canManage: settings.chores.find(e => e.userId.toString() === user._id.toString())?.canManage ?? true,
+            mobileNotifications: settings.chores.find(e => e.userId.toString() === user._id.toString())?.mobileNotifications ?? true
           }
         }
       : {}
@@ -74,7 +87,7 @@ const attachNotificationSettings = (users, settings) => {
 }
 
 const expiry = 15 * 60 * 1000
-const expiryMinutes = expiry / 1000
+const expiryMinutes = `${expiry / 60000}m`
 
 const resolvers = {
 
@@ -93,9 +106,19 @@ const resolvers = {
       const doc = await GlobalFlagdayEntries.findOne({ category: "solidFlagDays" })
       return doc ? doc.entries : []
     },
+
     flagDayByDate: async (_, { date }) => {
       const doc = await GlobalFlagdayEntries.findOne({ category: "solidFlagDays" })
       return doc ? doc.entries.filter(entry => entry.date === date) : []
+    },
+
+    irregularFlagDays: async (_, { year }) => {
+      try {
+        return calculateFlagDays(year)
+      } catch (err) {
+        console.error('Error loading irregular flag days:', err)
+        return []
+      }
     },
 
     latestPrices: async () => await fetchLatestPriceData(),
@@ -124,18 +147,20 @@ const resolvers = {
       const members = await User.find({ familyId: family._id })
       const settings = await NotificationSettings.findOne({ familyId: family._id })
       const membersWithNotifications = attachNotificationSettings(members, settings)
+      const ownerWithPermissions = membersWithNotifications.find(
+        m => m._id.toString() === family.owner._id.toString()
+      )
 
       return {
         familyId: family._id.toString(),
         name: family.name,
         owner: {
-          id: family.owner._id.toString(),
-          username: family.owner.username,
-          name: family.owner.name,
-          parent: family.owner.parent,
-          emailVerified: family.owner.emailVerified,
-          familyId: family.owner.familyId?.toString(),
-          notificationPermissions: family.owner.notificationPermissions
+          id: ownerWithPermissions._id.toString(),
+          username: ownerWithPermissions.username,
+          name: ownerWithPermissions.name,
+          parent: ownerWithPermissions.parent,
+          emailVerified: ownerWithPermissions.emailVerified,
+          familyId: ownerWithPermissions.familyId?.toString(),
         },
         members: membersWithNotifications.map(m => ({
           id: m._id.toString(),
@@ -144,7 +169,6 @@ const resolvers = {
           parent: m.parent,
           emailVerified: m.emailVerified,
           familyId: m.familyId?.toString(),
-          notificationPermissions: m.notificationPermissions,
           owner: family.owner._id.toString() === m._id.toString(),
           birthday: m.birthday
         }))
@@ -169,6 +193,65 @@ const resolvers = {
 
     invitedUsers: async (_root, { familyId }) => {
       return await InvitedUser.find({ familyId })
+    },
+
+    accessRules: async (_root, { resourceType, resourceId, creatorId }, context) => {
+      const currentUser = context.currentUser
+      if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
+
+      const rules = await AccessRule.find({ resourceType, resourceId })
+      const creatorRule = { id: 'creator', resourceType, resourceId, userId: creatorId, canView: true }
+      const merged = [creatorRule, ...rules.filter(r => r.userId.toString() !== creatorId.toString())]
+      return merged
+    },
+
+    userAccessRule: async (_root, { resourceType, resourceId, userId, creatorId }, context) => {
+      const currentUser = context.currentUser
+      if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
+
+      if (userId.toString() === creatorId.toString()) {
+        return { id: 'creator', resourceType, resourceId, userId, canView: true }
+      }
+      return await AccessRule.findOne({ resourceType, resourceId, userId })
+    },
+
+    calendarEntries: async (_root, { familyId }, context) => {
+      const currentUser = context.currentUser
+      if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
+      if (currentUser.familyId.toString() !== familyId.toString()) throw new Error('Ei oikeuksia')
+
+      const entries = await CalendarEntry.find({ familyId })
+      const entryIds = entries.map(e => e._id)
+      const rules = await AccessRule.find({ resourceType: 'calendarEvent', resourceId: { $in: entryIds }, userId: currentUser.id })
+      const allowed = new Set(rules.filter(r => r.canView).map(r => r.resourceId.toString()))
+
+      return entries
+        .filter(e => e.creatorId === currentUser.id || allowed.has(e.id))
+        .map(e => ({
+          id: e.id.toString(),
+          familyId: e.familyId.toString(),
+          creatorId: e.creatorId.toString(),
+          title: e.title,
+          details: e.details,
+          start: e.start.toISOString(),
+          end: e.end.toISOString(),
+          allDay: e.allDay,
+          viewUserIds: e.viewUserIds.map(id => id.toString()),
+          createdAt: e.createdAt.toISOString(),
+          updatedAt: e.updatedAt.toISOString()
+        }))
+    },
+
+    calendarEntry: async (_root, { id }, context) => {
+      const currentUser = context.currentUser
+      if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
+      const entry = await CalendarEntry.findById(id)
+      if (!entry) return null
+      if (entry.familyId.toString() !== currentUser.familyId.toString()) throw new Error('Ei oikeuksia')
+      if (entry.creatorId.toString() === currentUser.id.toString()) return entry
+      const rule = await AccessRule.findOne({ resourceType: 'calendarEvent', resourceId: entry._id, userId: currentUser.id })
+      if (rule?.canView) return entry
+      return null
     },
 
     weather: async (_, { lat, lon, city }) => {
@@ -219,7 +302,7 @@ const resolvers = {
       }))
     },
 
-    notificationSettings: async (_root, _args, context) => {
+    notificationSettings: async (_root, { category }, context) => {
       const currentUser = context.currentUser
       if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
 
@@ -227,6 +310,7 @@ const resolvers = {
       if (!settings) {
         settings = new NotificationSettings({
           familyId: currentUser.familyId,
+          wilma: [],
           electricity: [],
           calendar: [],
           shopping: [],
@@ -234,6 +318,10 @@ const resolvers = {
           chores: []
         })
         await settings.save()
+      }
+
+      if (category && categories.includes(category)) {
+        return { familyId: settings.familyId, [category]: settings[category] }
       }
 
       return settings
@@ -268,13 +356,6 @@ const resolvers = {
           emailVerified: true
         }).save()
 
-        const settings = await NotificationSettings.findOne({ familyId })
-        const categories = ['electricity','calendar','shopping','todo','chores']
-        categories.forEach(cat => {
-          settings[cat].push({ userId: user._id, enabled: true, canManage: true })
-        })
-        await settings.save()
-
         if (invitedUserId) {
           const invitedUser = await InvitedUser.findById(invitedUserId)
 
@@ -308,16 +389,6 @@ const resolvers = {
 
       user.familyId = family._id
       await user.save()
-
-      const settingsData = {}
-      categories.forEach(cat => {
-        settingsData[cat] = [{ userId: user._id, enabled: true, canManage: true }]
-      })
-      const settings = new NotificationSettings({
-        familyId: family._id,
-        ...settingsData
-      })
-      await settings.save()
 
       const emailVerificationToken = jwt.sign(
         { id: user._id },
@@ -483,8 +554,9 @@ const resolvers = {
           user.parent = false
         }
 
-        user.emailVerificationToken = null
         user.emailVerified = true
+        user.set('emailVerificationToken', undefined, { strict: false })
+        user.set('emailVerificationTokenExpiry', undefined, { strict: false })
         await user.save()
         return user
       }
@@ -494,14 +566,14 @@ const resolvers = {
       if (invitedUser.invitationTokenExpiry < new Date()) throw new GraphQLError("Token vanhentunut")
 
       invitedUser.emailVerified = true
-      invitedUser.invitationToken = null
-      invitedUser.invitationTokenExpiry = null
+      invitedUser.set('invitationToken', undefined, { strict: false })
+      invitedUser.set('invitationTokenExpiry', undefined, { strict: false })
       await invitedUser.save()
 
       return invitedUser
     },
 
-    updateNotificationSettings: async (_root, { familyId, userId, type, enabled, canManage }, context) => {
+    updateNotificationSettings: async (_root, { familyId, userId, type, enabled, canManage, mobileNotifications }, context) => {
       const currentUser = context.currentUser
       if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
 
@@ -509,10 +581,15 @@ const resolvers = {
         throw new Error("Ei valtuuksia muuttaa muiden asetuksia")
       }
 
+      if (!categories.includes(type)) {
+        throw new Error("Tuntematon kategoria")
+      }
+
       let settings = await NotificationSettings.findOne({ familyId })
       if (!settings) {
         settings = new NotificationSettings({
           familyId,
+          wilma: [],
           electricity: [],
           calendar: [],
           shopping: [],
@@ -525,12 +602,14 @@ const resolvers = {
       if (existing) {
         if (enabled !== undefined) existing.enabled = enabled
         if (canManage !== undefined) existing.canManage = canManage
+        if (mobileNotifications !== undefined) existing.mobileNotifications = mobileNotifications
       } else {
-        settings[type].push({ userId, enabled: enabled ?? true, canManage: canManage ?? true })
+        settings[type].push({ userId, enabled: enabled ?? true, canManage: canManage ?? true, mobileNotifications: mobileNotifications ?? true })
       }
 
       await settings.save()
-      return settings
+
+      return type ? { familyId: settings.familyId, [type]: settings[type] } : settings
     },
 
     deleteFamily: async (_root, { familyId }, context) => {
@@ -548,6 +627,137 @@ const resolvers = {
       await User.deleteMany({ familyId })
       await Family.findByIdAndDelete(familyId)
 
+      return true
+    }
+    ,
+
+    upsertAccessRule: async (_root, { resourceType, resourceId, userId, canView }, context) => {
+      console.log(resourceId)
+      const currentUser = context.currentUser
+      if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
+
+      const resource = await CalendarEntry.findById(resourceId)
+      if (!resource || resource.familyId.toString() !== currentUser.familyId.toString()) {
+        throw new Error("Ei oikeuksia tarkastella näitä sääntöjä")
+      }
+
+      const update = {}
+      if (canView !== undefined) update.canView = canView
+
+      const rule = await AccessRule.findOneAndUpdate(
+        { resourceType, resourceId, userId },
+        { $set: { resourceType, resourceId, userId, ...update } },
+        { upsert: true, new: true }
+      )
+
+      return rule
+    },
+
+    deleteAccessRule: async (_root, { id }, context) => {
+      const currentUser = context.currentUser
+      if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
+
+      const existing = await AccessRule.findById(id)
+      if (!existing) return false
+
+      const resource = await CalendarEntry.findById(existing.resourceId)
+      if (!resource || resource.familyId.toString() !== currentUser.familyId.toString()) {
+        throw new Error("Ei oikeuksia")
+      }
+
+      await AccessRule.findByIdAndDelete(id)
+      return true
+    },
+
+    createCalendarEntry: async (_root, { familyId, input }, context) => {
+      const currentUser = context.currentUser
+      if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
+      if (currentUser.familyId.toString() !== familyId.toString()) throw new Error('Ei oikeuksia')
+
+      const entry = await new CalendarEntry({
+        familyId,
+        creatorId: currentUser.id,
+        title: input.title,
+        details: input.details,
+        start: input.start ? new Date(input.start) : new Date(),
+        end: input.end ? new Date(input.end) : new Date(),
+        allDay: !!input.allDay,
+        viewUserIds: input.viewUserIds || [],
+      }).save()
+
+      const viewIds = new Set(input.viewUserIds || [])
+      await Promise.all(Array.from(viewIds).map(userId =>
+        AccessRule.findOneAndUpdate(
+          { resourceType: 'calendarEvent', resourceId: entry._id, userId },
+          { $set: { resourceType: 'calendarEvent', resourceId: entry._id, userId, canView: true } },
+          { upsert: true }
+        )
+      ))
+
+      return entry
+    },
+
+    updateCalendarEntry: async (_root, { id, input }, context) => {
+      const currentUser = context.currentUser
+      if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
+      const entry = await CalendarEntry.findById(id)
+      if (!entry) throw new Error('Ei löydy')
+      if (entry.familyId.toString() !== currentUser.familyId.toString()) throw new Error('Ei oikeuksia')
+
+      let canView = entry.creatorId.toString() === currentUser.id.toString()
+
+      if (!canView) {
+        const rule = await AccessRule.findOne({
+          resourceType: 'calendarEvent',
+          resourceId: entry._id,
+          userId: currentUser._id
+        })
+
+        if (!rule?.canView) throw new Error('Ei oikeuksia muokata')
+      }
+
+      entry.title = input.title
+      entry.details = input.details
+      entry.start = new Date(input.start)
+      entry.end = new Date(input.end)
+      entry.allDay = !!input.allDay
+      entry.viewUserIds = input.viewUserIds || []
+      await entry.save()
+
+      const desired = new Set(input.viewUserIds || [])
+      const existing = await AccessRule.find({ resourceType: 'calendarEvent', resourceId: entry._id })
+      const existingIds = new Set(existing.map(r => r.userId.toString()))
+      const toAdd = Array.from(desired).filter(id => !existingIds.has(id.toString()))
+      const toRemove = Array.from(existingIds).filter(id => !desired.has(id.toString()))
+
+      await Promise.all([
+        ...toAdd.map(userId => AccessRule.findOneAndUpdate(
+          { resourceType: 'calendarEvent', resourceId: entry._id, userId },
+          { $set: { resourceType: 'calendarEvent', resourceId: entry._id, userId, canView: true } },
+          { upsert: true }
+        )),
+        ...toRemove.map(userId => AccessRule.deleteOne({ resourceType: 'calendarEvent', resourceId: entry._id, userId }))
+      ])
+
+      return entry
+    },
+
+    deleteCalendarEntry: async (_root, { id }, context) => {
+      const currentUser = context.currentUser
+      if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
+      const entry = await CalendarEntry.findById(id)
+      if (!entry) return false
+      if (entry.familyId.toString() !== currentUser.familyId.toString()) throw new Error('Ei oikeuksia')
+
+      const creator = await User.findById(entry.creatorId)
+
+      if (currentUser.isOwner || !creator) {
+        const rule = await AccessRule.findOne({ resourceType: 'calendarEvent', resourceId: entry._id, userId: currentUser._id })
+        if (!rule?.canView) throw new Error('Ei oikeuksia poistaa')
+      }
+
+      await CalendarEntry.findByIdAndDelete(id)
+      await AccessRule.deleteMany({ resourceType: 'calendarEvent', resourceId: id })
       return true
     }
   }

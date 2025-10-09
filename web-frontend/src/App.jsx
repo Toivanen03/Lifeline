@@ -21,7 +21,7 @@ import Cards from './components/cards'
 import { ClockSettingsProvider } from './contexts/ClockContext'
 import { SettingsProvider } from './contexts/SettingsContext'
 import { ElectricitySettingsProvider } from './contexts/ElectricityContext'
-import { CalendarSettingsProvider } from './contexts/CalendarContext'
+import { CalendarSettingsProvider } from './contexts/CalendarWidgetContext'
 import { CalendarDayProvider } from './contexts/CalendarDayContext'
 
 function App() {

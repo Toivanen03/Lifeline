@@ -1,13 +1,19 @@
 import { Modal, Button, Form } from "react-bootstrap"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useContext } from "react"
+import { useAccessManagement } from "../../contexts/AccessManagementContext"
+import { AuthContext } from "../../contexts/AuthContext"
 
-const CalendarEventModal = ({ show, handleClose, date, onSave, onDelete, eventToEdit, notify }) => {
+const CalendarEventModal = ({ show, handleClose, date, onSave, onDelete, eventToEdit, notify, familyMembers }) => {
   const [title, setTitle] = useState("")
   const [details, setDetails] = useState("")
   const [allDay, setAllDay] = useState(false)
   const [start, setStart] = useState(new Date())
   const [end, setEnd] = useState(new Date())
   const [prevTimes, setPrevTimes] = useState(null)
+  const [userWithView, setUserWithView] = useState([])
+  const [onlyMe, setOnlyMe] = useState(false)
+  const { rules, setUserRights } = useAccessManagement()
+  const { currentUser } = useContext(AuthContext)
 
   const locked = eventToEdit?.classNames?.includes('locked') || false
 
@@ -35,6 +41,16 @@ const CalendarEventModal = ({ show, handleClose, date, onSave, onDelete, eventTo
       setEnd(defaultEnd)
     }
   }, [show, eventToEdit, date])
+
+  useEffect(() => {
+    if (!show) return
+    const initial = (rules || [])
+      .filter(r => r?.canView)
+      .map(r => r.userId)
+    const withSelf = currentUser?.id ? Array.from(new Set([...(initial || []), currentUser.id])) : initial
+    setUserWithView(withSelf)
+    setOnlyMe(withSelf?.length === 1 && withSelf[0] === currentUser?.id)
+  }, [show, rules])
 
   const toLocalDateTimeString = (d) => {
     if (!d) return ""
@@ -68,7 +84,9 @@ const CalendarEventModal = ({ show, handleClose, date, onSave, onDelete, eventTo
       notify("Tapahtuman päättymisaika ei voi olla ennen alkamisaikaa.", "warning")
       return
     }
-    const eventData = { id: eventToEdit?.id, title, start, end, allDay, details }
+    const withSelf = currentUser?.id ? Array.from(new Set([...(userWithView || []), currentUser.id])) : (userWithView || [])
+    const eventData = { id: eventToEdit?.id, title, start, end, allDay, details, viewUserIds: withSelf }
+
     onSave(eventData)
     notify("Merkintä tallennettu onnistuneesti!", "success")
     handleClose()
@@ -95,6 +113,62 @@ const CalendarEventModal = ({ show, handleClose, date, onSave, onDelete, eventTo
           <Form.Group className="mb-3">
             <Form.Label>Lisätiedot</Form.Label>
             <Form.Control as="textarea" rows={8} value={details} disabled={locked} onChange={(e) => setDetails(e.target.value)} />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Merkinnän näkyvyys:</Form.Label>
+            <div>
+              <Form.Check
+                type="checkbox"
+                id="view-only-me"
+                label="Vain minä"
+                checked={onlyMe}
+                disabled={locked}
+                onChange={async (e) => {
+                  const isChecked = e.target.checked
+                  setOnlyMe(isChecked)
+                  if (isChecked) {
+                    const selfOnly = currentUser?.id ? [currentUser.id] : []
+                    setUserWithView(selfOnly)
+                    if (eventToEdit?.id) {
+                      try {
+                        const others = (familyMembers || []).map(m => m.id).filter(id => id !== currentUser?.id)
+                        await Promise.all([
+                          currentUser?.id ? setUserRights({ userId: currentUser.id, canView: true }) : Promise.resolve(),
+                          ...others.map(uid => setUserRights({ userId: uid, canView: false }))
+                        ])
+                      } catch (_) {}
+                    }
+                  }
+                }}
+              />
+              {(familyMembers || []).filter(m => m.id !== currentUser?.id).map(member => {
+                const checked = userWithView.includes(member.id)
+                return (
+                  <Form.Check
+                    key={member.id}
+                    type="checkbox"
+                    id={`view-${member.id}`}
+                    label={member.name || member.username}
+                    checked={checked}
+                    disabled={locked || onlyMe}
+                    onChange={async (e) => {
+                      const isChecked = e.target.checked
+                      setUserWithView(prev => {
+                        const set = new Set(prev)
+                        if (isChecked) set.add(member.id)
+                        else set.delete(member.id)
+                        return Array.from(set)
+                      })
+                      if (eventToEdit?.id) {
+                        try {
+                          await setUserRights({ userId: member.id, canView: isChecked })
+                        } catch (_) {}
+                      }
+                    }}
+                  />
+                )
+              })}
+            </div>
           </Form.Group>
           {!locked && <Form.Group className="mb-3">
             <Form.Check type="checkbox" label="Koko päivä" checked={allDay} onChange={handleAllDayChange} />

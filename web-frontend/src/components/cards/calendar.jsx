@@ -6,21 +6,23 @@ import timeGridPlugin from "@fullcalendar/timegrid"
 import interactionPlugin from "@fullcalendar/interaction"
 import multiMonthPlugin from "@fullcalendar/multimonth"
 import fiLocale from "@fullcalendar/core/locales/fi"
-import { useRef, useState, useEffect } from "react"
+import { useRef, useState, useEffect, useContext } from "react"
 import { useQuery } from "@apollo/client/react"
 import { Button } from "react-bootstrap"
 import { FontAwesomeIcon  } from '@fortawesome/react-fontawesome'
 import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import CalendarEventModal from "../calendar/calendarEventModal"
 import SearchBar from "../calendar/searchBar"
-import { useCalendarSettings } from "../../contexts/CalendarContext"
+import { useCalendarSettings } from "../../contexts/CalendarWidgetContext"
 import { useEvents } from "../calendar/useEvents"
 import { insertSolidCalendarEntries } from "../calendar/calendarEventEngine"
 import { useCalendarDay } from "../../contexts/CalendarDayContext"
-import { GET_FLAGDAYS, GET_NAMEDAYS } from "../../schema/queries"
+import { GET_FLAGDAYS, GET_IRREGULAR_FLAGDAYS, GET_NAMEDAYS } from "../../schema/queries"
 import { InfoModal } from "../calendar/calendarEventEngine"
+import { AuthContext } from "../../contexts/AuthContext"
+import { AccessManagementProvider } from "../../contexts/AccessManagementContext"
 
-const CalendarFull = ({ notify }) => {
+const CalendarFull = ({ notify, familyMembers }) => {
   const { currentDate, setCurrentDate, selectedDate, setSelectedDate, highlightedDate, setHighlightedDate } = useCalendarDay()
   const { events, addEvent, updateEvent, deleteEvent } = useEvents()
   const [selectedEvent, setSelectedEvent] = useState(null)
@@ -35,9 +37,21 @@ const CalendarFull = ({ notify }) => {
   const { state } = useLocation()
   const { calendarSettings } = useCalendarSettings()
   const calendarRef = useRef(null)
+  const { currentUser } = useContext(AuthContext)
 
   const { data: nameData, loading: nameLoading } = useQuery(GET_NAMEDAYS)
-  const { data: flagData, loading: flagLoading } = useQuery(GET_FLAGDAYS)
+  const { data: rawFlagData, loading: flagLoading } = useQuery(GET_FLAGDAYS)
+  const { data: rawIrregularFlagData, loading: irregularFlagLoading } = useQuery(GET_IRREGULAR_FLAGDAYS, {
+    variables: {
+      year: currentDate?.getFullYear().toString()
+    }
+  })
+  const flagData = {
+    flagDays: [
+      ...(rawFlagData?.flagDays || []),
+      ...(rawIrregularFlagData?.irregularFlagDays || [])
+    ]
+  }
 
   const openFlagDayModal = (title, info, links) => {
     setModalTitle(title)
@@ -56,7 +70,7 @@ const CalendarFull = ({ notify }) => {
   }, [state])
 
   useEffect(() => {
-    if (nameLoading || flagLoading) return
+    if (nameLoading || flagLoading || irregularFlagLoading) return
     insertSolidCalendarEntries(
       calendarRef,
       flagData,
@@ -70,7 +84,7 @@ const CalendarFull = ({ notify }) => {
       events,
       addEvent
     )
-  }, [nameLoading, flagLoading, nameData, flagData, openFlagDayModal, currentDate, events, addEvent])
+  }, [nameLoading, flagLoading, irregularFlagLoading, nameData, flagData, openFlagDayModal, currentDate, events, addEvent])
 
   const handleChangeView = (newView) => {
     setView(newView)
@@ -182,8 +196,10 @@ const CalendarFull = ({ notify }) => {
       >
         <div className="row">
           <div className={animatedClass}>
-            <p>Nimipäivä {highlightedDate.toLocaleDateString("fi-FI")}</p>
-            <span>{namedayToday}</span>
+            <div className="row">
+              <span className="mb-1"><b>Nimipäivä tänään:</b></span>
+              <span>{namedayToday.join(`,\n`) + "."}</span>
+            </div>
           </div>
           <div className="col-6 d-flex justify-content-center align-items-start">
             <Button className="mb-4 ms-2 me-2" onClick={() => { view !== "timeGridDay" && handleChangeView("timeGridDay"); calendarRef.current?.getApi().today() }}>
@@ -245,7 +261,8 @@ const CalendarFull = ({ notify }) => {
                   end: info.event.end,
                   details: info.event.extendedProps?.details || "",
                   links: info.event.extendedProps?.links || [],
-                  classNames: info.event.classNames || []
+                  classNames: info.event.classNames || [],
+                  creatorId: info.event.extendedProps?.creatorId
                 })
                 setShowModal(true)
                 setSelectedDate(null)
@@ -282,23 +299,29 @@ const CalendarFull = ({ notify }) => {
                 }}
               }
             />
-
-            <CalendarEventModal
-              show={showModal}
-              handleClose={() => setShowModal(false)}
-              date={selectedDate}
-              onSave={(event) => {
-                if (event.id) {
-                  updateEvent(event.id, event)
-                } else {
-                  addEvent(event)
-                }
-                setShowModal(false)
-              }}
-              onDelete={(id) => { deleteEvent(id); setShowModal(false) }}
-              eventToEdit={selectedEvent}
-              notify={notify}
-            />
+            <AccessManagementProvider
+              resourceType="calendarEvent"
+              resourceId={selectedEvent?.id}
+              creatorId={selectedEvent?.creatorId}
+            >
+              <CalendarEventModal
+                show={showModal}
+                handleClose={() => setShowModal(false)}
+                date={selectedDate}
+                onSave={(event) => {
+                  if (event.id) {
+                    updateEvent(event.id, event)
+                  } else {
+                    addEvent(event)
+                  }
+                  setShowModal(false)
+                }}
+                onDelete={(id) => { deleteEvent(id); setShowModal(false) }}
+                eventToEdit={selectedEvent}
+                notify={notify}
+                familyMembers={familyMembers}
+              />
+            </AccessManagementProvider>
 
             <InfoModal
               show={showInfoModal}

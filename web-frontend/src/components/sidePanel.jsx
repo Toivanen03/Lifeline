@@ -16,7 +16,7 @@ const SidePanel = ({ familyMembers, showCard }) => {
     ]
 
     return (
-        <div className='container p-1 d-flex flex-column align-items-center bg-light' style={{ height: '89vh', borderRight: '1px solid #ccc' }}>
+        <div className='container d-flex flex-column align-items-center bg-light' style={{ height: '89vh', width: '10vw', borderRight: '1px solid #ccc' }}>
             <ul className="nav flex-column flex-grow-1 d-flex justify-content-between">
                 {links.map(link => (
                     <li key={link.path} className="nav-item">

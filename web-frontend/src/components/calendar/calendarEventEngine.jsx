@@ -88,21 +88,19 @@ export const insertSolidCalendarEntries = (calendarRef, flagData, nameData, open
     const match = flagData?.flagDays?.find(item => item.date === date)
     const additional = additionalHolidays.find(item => item.start.slice(5, 10) === date)
 
-    if (match) {
+      if (match) {
       if (match.date === currentDate.toISOString().split('T')[0].slice(8, 10) + '-' + currentDate.toISOString().split('T')[0].slice(5, 7)) {
         setFlagDayToday(match.title)
       }
-      const exists = events.some(e => e.title === match.title && e.start === match.start)
-      if (!exists) addEvent(match)
+        // Do not add auto events to the events state; only render decoration
       return match
     }
 
-    if (additional) {
+      if (additional) {
       if (additional.date === currentDate.toISOString().split('T')[0].slice(8, 10) + '-' + currentDate.toISOString().split('T')[0].slice(5, 7)) {
         setFlagDayToday(additional.title)
       }
-      const exists = events.some(e => e.title === additional.title && e.start === additional.start)
-      if (!exists) addEvent(additional)
+        // Do not add auto events to the events state; only render decoration
       return additional
     }
 
@@ -119,19 +117,16 @@ export const insertSolidCalendarEntries = (calendarRef, flagData, nameData, open
     if (match.date === currentDate.toISOString().split('T')[0].slice(8, 10) + '-' + currentDate.toISOString().split('T')[0].slice(5, 7)) {
       setNamedayToday(match.names)
     }
-    const exists = events.some(e => e.title === match.title && e.start === match.start)
-    if (!exists) addEvent(match)
+    // Do not add auto events to the events state; only render decoration
     return match.names.join(", ")
   }
 
   setTimeout(() => {
     if (!calendarRef.current) return
 
-    const today = new Date().getDate()
     const api = calendarRef?.current?.getApi()
     const calendarEl = api.el
 
-    const todayTop = calendarEl.querySelector(".fc-day-today .fc-daygrid-day-top")
     const otherDay = calendarEl.querySelectorAll(".fc-daygrid-day-bg")
 
     otherDay.forEach((dayEl) => {
@@ -143,7 +138,7 @@ export const insertSolidCalendarEntries = (calendarRef, flagData, nameData, open
       const cellDate = cellDateRaw.toISOString().split('T')[0].slice(8, 10) + '-' + cellDateRaw.toISOString().split('T')[0].slice(5, 7)
 
       const flagdayText = checkFlagday(cellDate, flagData)
-      const namedayText = checkNameday(cellDate, nameData)
+      const namedayText = calendarRef?.current?.getApi().view.type !== "multiMonthYear" ? checkNameday(cellDate, nameData) : ""
 
       if (flagdayText || namedayText) {
         const value = flagdayText ? (flagdayText.name || flagdayText.title) : ""

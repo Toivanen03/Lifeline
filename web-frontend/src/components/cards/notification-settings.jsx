@@ -1,6 +1,7 @@
 import { useMutation } from '@apollo/client/react'
 import { UPDATE_NOTIFICATION_SETTINGS } from '../../schema/queries'
 import FamilyNotificationSettings from '../settings/notificationSettings'
+import MobileNotificationSettings from '../settings/MobileNotificationSettings'
 import { AuthContext } from '../../contexts/AuthContext'
 import { useContext } from 'react'
 import { motion } from "framer-motion"
@@ -17,6 +18,10 @@ const NotificationSettings = ({ familyMembers }) => {
     { type: "chores", title: "Kotityöt" }
   ]
 
+  const mobileNotificationTypes = [
+    { type: "wilma", title: "Lukujärjestykset" },
+  ]
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -25,20 +30,40 @@ const NotificationSettings = ({ familyMembers }) => {
       transition={{ duration: 0.4 }}
       className="d-flex justify-content-center align-items-start mt-5"
     >
-      <div className="card shadow-lg" style={{ border: '1px solid black', borderRadius: 20, backgroundColor: 'white', width: '70%' }}>
+      <div className="card shadow-lg" style={{ border: '1px solid black', borderRadius: 20, backgroundColor: 'white', width: '80vw' }}>
           <h2 className="mt-3 mb-2">{currentUser?.name}</h2>
-          <h4 className='mb-4'>Ilmoitusasetukset</h4>
-          <div style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-          {notificationTypes.map(n => (
-            <FamilyNotificationSettings
-              key={n.type}
-              type={n.type}
-              title={n.title}
-              currentUser={currentUser}
-              updateNotificationSettings={updateNotificationSettings}
-              familyMembers={familyMembers}
-            />
-          ))}
+          <div className='row'>
+            <div className='col-6'>
+              <h4 className='mb-4'>Yleiset ilmoitusasetukset</h4>
+              <div style={{ maxHeight: '64vh', overflowY: 'auto', overflowX: 'hidden' }}>
+                {notificationTypes.map(n => (
+                  <FamilyNotificationSettings
+                    key={n.type}
+                    type={n.type}
+                    title={n.title}
+                    currentUser={currentUser}
+                    updateNotificationSettings={updateNotificationSettings}
+                    familyMembers={familyMembers}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className='col-6'>
+              <h4 className='mb-4'>Mobiili-ilmoitukset</h4>
+              <div style={{ maxHeight: '60vh', overflowY: 'auto', overflowX: 'hidden' }}>
+                {mobileNotificationTypes.map(n => (
+                  <MobileNotificationSettings
+                    key={n.type}
+                    type={n.type}
+                    title={n.title}
+                    currentUser={currentUser}
+                    updateNotificationSettings={updateNotificationSettings}
+                    familyMembers={familyMembers}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
       </div>
     </motion.div>

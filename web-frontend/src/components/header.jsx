@@ -5,9 +5,11 @@ const Header = ({ notify, navigate }) => {
     const { logout, currentUser, isLoggedIn } = useContext(AuthContext)
 
     const logOut = () => {
-        logout()
-        notify("Uloskirjautuminen onnistui.", "info")
-        navigate("/login")
+        if (window.confirm("Haluatko varmasti kirjautua ulos?")) {
+            logout()
+            notify("Uloskirjautuminen onnistui.", "info")
+            navigate("/login")
+        }
     }
     return (
         <header className="container-fluid bg-dark text-white p-2">

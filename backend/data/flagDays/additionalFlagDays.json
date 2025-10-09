@@ -2,35 +2,54 @@
   "variableFlagDays": [
     {
       "name": "Äitienpäivä",
-      "date": "2025-05-11T00:00:00+00:00",
+      "month": 5,
+      "weekday": 0,
+      "nth": 2,
       "description": "Äitienpäivä on äitien kunniaksi vuosittain vietettävä juhlapäivä. Suomessa äitienpäivä on toukokuun toisena sunnuntaina, ja se on virallinen liputuspäivä.",
       "official": true,
       "links": ["https://fi.wikipedia.org/wiki/%C3%84itienp%C3%A4iv%C3%A4"]
     },
     {
       "name": "Isänpäivä",
-      "date": "2025-11-09T00:00:00+00:00",
+      "month": 11,
+      "weekday": 0,
+      "nth": 2,
       "description": "Isänpäivä on juhlapäivä, jota vietetään isien kunniaksi ja muistoksi. Suomessa se on marraskuun toinen sunnuntai ja virallinen liputuspäivä.",
       "official": true,
       "links": ["https://fi.wikipedia.org/wiki/Is%C3%A4np%C3%A4iv%C3%A4"]
     },
     {
+      "name": "Juhannusaatto",
+      "month": 6,
+      "weekday": 5,
+      "nth": "aroundSolstice",
+      "description": "Juhannus on valon ja keskikesän juhla, jota vietetään kesäkuussa kesäpäivänseisauksen tienoilla. Suomessa juhannus on virallinen liputuspäivä, jolloin liputetaan koko juhannusyön ajan.",
+      "official": true,
+      "links": ["https://fi.wikipedia.org/wiki/Juhannus"]
+    },
+    {
       "name": "Juhannuspäivä",
-      "date": "2025-06-21T00:00:00+00:00",
+      "month": 6,
+      "weekday": 6,
+      "nth": "aroundSolstice",
       "description": "Juhannus on valon ja keskikesän juhla, jota vietetään kesäkuussa kesäpäivänseisauksen tienoilla. Suomessa juhannus on virallinen liputuspäivä, jolloin liputetaan koko juhannusyön ajan.",
       "official": true,
       "links": ["https://fi.wikipedia.org/wiki/Juhannus"]
     },
     {
       "name": "Kaatuneitten muistopäivä",
-      "date": "2025-05-18T00:00:00+00:00",
+      "month": 5,
+      "weekday": 0,
+      "nth": 3,
       "description": "Kaatuneitten muistopäivä, jota vietetään toukokuun kolmantena sunnuntaina, on Suomen aluetta ja suomalaisia koskettaneissa sodissa kuolleiden muistoksi vietettävä päivä.",
       "official": false,
       "links": ["https://fi.wikipedia.org/wiki/Kaatuneitten_muistop%C3%A4iv%C3%A4"]
     },
     {
       "name": "Suomen luonnon päivä",
-      "date": "2025-08-30T00:00:00+00:00",
+      "month": 8,
+      "weekday": 6,
+      "nth": "last",
       "description": "Suomen luonnon päivä on luonnon juhlapäivä, jota vietetään elokuun viimeisenä lauantaina. Päivän tarkoituksena on koota suomalaiset yhteen juhlistamaan ja arvostamaan Suomen luontoa.",
       "official": true,
       "links": ["https://fi.wikipedia.org/wiki/Suomen_luonnon_p%C3%A4iv%C3%A4"]

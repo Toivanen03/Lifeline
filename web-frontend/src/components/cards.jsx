@@ -29,7 +29,7 @@ const Cards = ({ notify, familyMembers, firstname }) => {
             <Route path="/notification-settings" element={<NotificationSettings familyMembers={familyMembers} />} />
             <Route path="/weatherinfo" element={<WeatherInfo />} />
             <Route path="/forecast" element={<Forecast />} />
-            <Route path="/calendar" element={<CalendarFull notify={notify} firstname={firstname} />} />
+            <Route path="/calendar" element={<CalendarFull notify={notify} firstname={firstname} familyMembers={familyMembers} />} />
         </>
     )
 }

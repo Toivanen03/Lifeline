@@ -1,7 +1,7 @@
 import { NOTIFICATION_SETTINGS } from "../../schema/queries"
 import { useQuery } from "@apollo/client/react"
 
-const FamilyNotificationSettings = ({ type, title, updateNotificationSettings, currentUser, familyMembers }) => {
+const MobileNotificationSettings = ({ type, title, updateNotificationSettings, currentUser, familyMembers }) => {
   const { data: settingsData, refetch: refetchSettings } = useQuery(NOTIFICATION_SETTINGS, {
     skip: !currentUser
   })
@@ -17,6 +17,7 @@ const FamilyNotificationSettings = ({ type, title, updateNotificationSettings, c
       name: u.name,
       enabled: setting.enabled ?? false,
       canManage: setting.canManage ?? true,
+      mobileNotifications: setting.mobileNotifications ?? true,
       parent: u.parent ?? false
     }
   })
@@ -55,7 +56,7 @@ const FamilyNotificationSettings = ({ type, title, updateNotificationSettings, c
                     id={`${u.id}Switch`}
                     type="checkbox"
                     className="form-check-input"
-                    checked={u.enabled}
+                    checked={u.mobileNotifications}
                     disabled={!allowed}
                     onChange={async () => {
                       try {
@@ -64,7 +65,7 @@ const FamilyNotificationSettings = ({ type, title, updateNotificationSettings, c
                             familyId: currentUser.familyId,
                             userId: u.id,
                             type,
-                            enabled: !u.enabled
+                            mobileNotifications: !u.mobileNotifications
                           }
                         })
                         await refetchSettings()
@@ -114,4 +115,4 @@ const FamilyNotificationSettings = ({ type, title, updateNotificationSettings, c
   )
 }
 
-export default FamilyNotificationSettings
+export default MobileNotificationSettings

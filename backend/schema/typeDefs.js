@@ -6,16 +6,26 @@ const typeDefs = gql`
     userId: ID!
     enabled: Boolean!
     canManage: Boolean!
+    mobileNotifications: Boolean!
   }
 
   type NotificationSettings {
     id: ID!
     familyId: ID!
+    wilma: [UserSettingEntry!]!
     electricity: [UserSettingEntry]
     calendar: [UserSettingEntry]
     shopping: [UserSettingEntry]
     todo: [UserSettingEntry]
     chores: [UserSettingEntry]
+  }
+
+  type AccessRule {
+    id: ID!
+    resourceType: String!
+    resourceId: ID!
+    userId: ID!
+    canView: Boolean!
   }
 
   type User {
@@ -66,12 +76,19 @@ const typeDefs = gql`
     prices: [Price]
   }
 
+  type NotificationPermissionEntry {
+    enabled: Boolean!
+    canManage: Boolean!
+    mobileNotifications: Boolean!
+  }
+
   type NotificationPermissions {
-    electricity: Boolean!
-    calendar: Boolean!
-    shopping: Boolean!
-    todo: Boolean!
-    chores: Boolean!
+    wilma: NotificationPermissionEntry!
+    electricity: NotificationPermissionEntry!
+    calendar: NotificationPermissionEntry!
+    shopping: NotificationPermissionEntry!
+    todo: NotificationPermissionEntry!
+    chores: NotificationPermissionEntry!
   }
 
   type InvitedUser {
@@ -79,6 +96,29 @@ const typeDefs = gql`
     username: String!
     invitationTokenExpiry: String
     familyName: String
+  }
+
+  type CalendarEntry {
+    id: ID!
+    familyId: ID!
+    creatorId: ID!
+    title: String!
+    details: String
+    start: String!
+    end: String!
+    allDay: Boolean!
+    viewUserIds: [ID!]
+    createdAt: String
+    updatedAt: String
+  }
+
+  input CalendarEntryInput {
+    title: String!
+    details: String
+    start: String!
+    end: String!
+    allDay: Boolean
+    viewUserIds: [ID!]
   }
 
   type Query {
@@ -97,8 +137,13 @@ const typeDefs = gql`
     nameDays: [NameDay]!
     nameDayByDate(date: String!): [NameDay]!
     flagDays: [FlagDay!]!
+    irregularFlagDays(year: String): [FlagDay!]!
     flagDayByDate(date: String!): [FlagDay!]!
     invitedUsers(familyId: ID!): [InvitedUser!]!
+    accessRules(resourceType: String!, resourceId: ID!, creatorId: ID!): [AccessRule!]!
+    userAccessRule(resourceType: String!, resourceId: ID!, userId: ID!, creatorId: ID!): AccessRule
+    calendarEntries(familyId: ID!): [CalendarEntry!]!
+    calendarEntry(id: ID!): CalendarEntry
   }
 
   type Family {
@@ -107,6 +152,7 @@ const typeDefs = gql`
     owner: User!
     birthday: String
     members: [User!]!
+    notificationPermissions: NotificationPermissions
   }
 
   type Token {
@@ -143,10 +189,15 @@ const typeDefs = gql`
     updatePassword(newPassword: String, token: String): User
     verifyEmailOrInvite(token: String, familyId: String): User
     requestPasswordReset(email: String!): Boolean
-    updateNotificationSettings(familyId: ID, userId: ID!, type: String!, enabled: Boolean, canManage: Boolean): UserSettingEntry
+    updateNotificationSettings(familyId: ID, userId: ID!, type: String!, enabled: Boolean, canManage: Boolean, mobileNotifications: Boolean): UserSettingEntry
     resendEmailVerificationToken(email: String!): Boolean
     updateParent(userId: ID!, parent: Boolean!): User
     updateBirthday(userId: ID!, birthday: String): User
+    upsertAccessRule(resourceType: String!, resourceId: ID!, userId: ID!, canView: Boolean): AccessRule!
+    deleteAccessRule(id: ID!): Boolean!
+    createCalendarEntry(familyId: ID!, input: CalendarEntryInput!): CalendarEntry!
+    updateCalendarEntry(id: ID!, input: CalendarEntryInput!): CalendarEntry!
+    deleteCalendarEntry(id: ID!): Boolean!
   }
 `
 
