@@ -4,16 +4,16 @@ import { useAccessManagement } from "../../contexts/AccessManagementContext"
 import { AuthContext } from "../../contexts/AuthContext"
 
 const CalendarEventModal = ({ show, handleClose, date, onSave, onDelete, eventToEdit, notify, familyMembers }) => {
+  const { currentUser } = useContext(AuthContext)
   const [title, setTitle] = useState("")
   const [details, setDetails] = useState("")
   const [allDay, setAllDay] = useState(false)
   const [start, setStart] = useState(new Date())
   const [end, setEnd] = useState(new Date())
   const [prevTimes, setPrevTimes] = useState(null)
-  const [userWithView, setUserWithView] = useState([])
-  const [onlyMe, setOnlyMe] = useState(false)
+  const [userWithView, setUserWithView] = useState([currentUser.id])
+  const [onlyMe, setOnlyMe] = useState(true)
   const { rules, setUserRights } = useAccessManagement()
-  const { currentUser } = useContext(AuthContext)
 
   const locked = eventToEdit?.classNames?.includes('locked') || false
 
@@ -42,7 +42,7 @@ const CalendarEventModal = ({ show, handleClose, date, onSave, onDelete, eventTo
     }
   }, [show, eventToEdit, date])
 
-  useEffect(() => {
+  /*useEffect(() => {
     if (!show) return
     const initial = (rules || [])
       .filter(r => r?.canView)
@@ -50,7 +50,11 @@ const CalendarEventModal = ({ show, handleClose, date, onSave, onDelete, eventTo
     const withSelf = currentUser?.id ? Array.from(new Set([...(initial || []), currentUser.id])) : initial
     setUserWithView(withSelf)
     setOnlyMe(withSelf?.length === 1 && withSelf[0] === currentUser?.id)
-  }, [show, rules])
+  }, [show, rules])*/
+
+  useEffect(() => {
+    setOnlyMe(userWithView.length === 1 && userWithView.includes(currentUser.id))
+  }, [userWithView])
 
   const toLocalDateTimeString = (d) => {
     if (!d) return ""
@@ -120,25 +124,23 @@ const CalendarEventModal = ({ show, handleClose, date, onSave, onDelete, eventTo
               <Form.Check
                 type="checkbox"
                 id="view-only-me"
-                label="Vain minä"
-                checked={onlyMe}
-                disabled={locked}
+                label="Minä"
+                checked={userWithView.includes(currentUser.id)}
+                disabled={eventToEdit?.creatorId === currentUser.id}
                 onChange={async (e) => {
                   const isChecked = e.target.checked
-                  setOnlyMe(isChecked)
-                  if (isChecked) {
-                    const selfOnly = currentUser?.id ? [currentUser.id] : []
-                    setUserWithView(selfOnly)
-                    if (eventToEdit?.id) {
-                      try {
-                        const others = (familyMembers || []).map(m => m.id).filter(id => id !== currentUser?.id)
-                        await Promise.all([
-                          currentUser?.id ? setUserRights({ userId: currentUser.id, canView: true }) : Promise.resolve(),
-                          ...others.map(uid => setUserRights({ userId: uid, canView: false }))
-                        ])
-                      } catch (_) {}
-                    }
+                  setUserWithView(prev => {
+                    const set = new Set(prev)
+                    if (isChecked) set.add(currentUser.id)
+                    else if (currentUser.id !== eventToEdit?.creatorId) set.delete(currentUser.id)
+                    return Array.from(set)
+                  })
+                  if (eventToEdit?.id) {
+                    try {
+                      await setUserRights({ userId: currentUser.id, canView: isChecked })
+                    } catch (_) {}
                   }
+                  if (!isChecked) notify("Olet poistanut itsesi merkinnästä.", "info")
                 }}
               />
               {(familyMembers || []).filter(m => m.id !== currentUser?.id).map(member => {
@@ -148,17 +150,37 @@ const CalendarEventModal = ({ show, handleClose, date, onSave, onDelete, eventTo
                     key={member.id}
                     type="checkbox"
                     id={`view-${member.id}`}
-                    label={member.name || member.username}
-                    checked={checked}
-                    disabled={locked || onlyMe}
+                    label={member.name.split(' ')[0]}
+                    checked={checked || member.id === eventToEdit?.creatorId}
+                    disabled={member.id === eventToEdit?.creatorId}
                     onChange={async (e) => {
                       const isChecked = e.target.checked
+                      if (!isChecked && member.id === currentUser.id && member.id !== eventToEdit?.creatorId) {
+                        const creatorOnly = eventToEdit?.creatorId ? [eventToEdit.creatorId] : []
+                        setUserWithView(creatorOnly)
+                        setOnlyMe(false)
+
+                        if (eventToEdit?.id && eventToEdit?.creatorId) {
+                          try {
+                            await Promise.all([
+                              setUserRights({ userId: currentUser.id, canView: false }),
+                              setUserRights({ userId: eventToEdit.creatorId, canView: true })
+                            ])
+                          } catch (_) {}
+                        }
+                        notify("Olet poistanut itsesi merkinnästä.", "info")
+                        return
+                      }
+
                       setUserWithView(prev => {
                         const set = new Set(prev)
                         if (isChecked) set.add(member.id)
                         else set.delete(member.id)
-                        return Array.from(set)
+                        const userList = Array.from(set)
+                        setOnlyMe(userList.length === 1 && userList.includes(currentUser.id))
+                        return userList
                       })
+
                       if (eventToEdit?.id) {
                         try {
                           await setUserRights({ userId: member.id, canView: isChecked })

@@ -79,6 +79,7 @@ export const useEvents = () => {
         const mapped = mapApiToEvent(saved)
         setEvents(prev => [...prev.filter(e => e.id !== mapped.id), mapped])
       }
+      refetch()
       return res?.data?.createCalendarEntry || null
     })
   }

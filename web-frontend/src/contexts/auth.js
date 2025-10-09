@@ -28,9 +28,23 @@ const authLink = new SetContextLink((_, { headers }) => {
   }
 })
 
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        accessRules: {
+          merge(existing = [], incoming) {
+            return [...incoming]
+          }
+        }
+      }
+    }
+  }
+})
+
 const client = new ApolloClient({
   link: authLink.concat(httpLink),
-  cache: new InMemoryCache(),
+  cache,
   defaultOptions
 })
 
