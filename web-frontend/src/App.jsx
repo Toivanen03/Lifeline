@@ -91,7 +91,7 @@ function App() {
                       <Route path="/confirm-email" element={<ConfirmEmail notify={notify} />} />
                       <Route element={<ProtectedRoute />}>
                         <Route path="/" element={<Home familyMembers={familyMembers} notify={notify} />}>
-                          {Cards({notify, familyMembers, firstname})}
+                           {Cards({notify, familyMembers})}
                         </Route>
                       </Route>
                     </Routes>

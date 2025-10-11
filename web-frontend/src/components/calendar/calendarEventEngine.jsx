@@ -90,17 +90,17 @@ export const insertSolidCalendarEntries = (calendarRef, flagData, nameData, open
 
       if (match) {
       if (match.date === currentDate.toISOString().split('T')[0].slice(8, 10) + '-' + currentDate.toISOString().split('T')[0].slice(5, 7)) {
-        setFlagDayToday(match.title)
+        setFlagDayToday(match.name)
       }
-        // Do not add auto events to the events state; only render decoration
+
       return match
     }
 
       if (additional) {
       if (additional.date === currentDate.toISOString().split('T')[0].slice(8, 10) + '-' + currentDate.toISOString().split('T')[0].slice(5, 7)) {
-        setFlagDayToday(additional.title)
+        setFlagDayToday(additional.name)
       }
-        // Do not add auto events to the events state; only render decoration
+
       return additional
     }
 

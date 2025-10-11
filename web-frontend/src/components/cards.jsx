@@ -13,7 +13,7 @@ import CalendarFull from "./cards/calendar"
 import MealMenus from "./cards/mealmenus"
 import FamilyMember from "./cards/familyMember"
 
-const Cards = ({ notify, familyMembers, firstname }) => {
+const Cards = ({ notify, familyMembers }) => {
 
     return (
         <>
@@ -23,13 +23,13 @@ const Cards = ({ notify, familyMembers, firstname }) => {
             <Route path="/mealmenus" element={<MealMenus notify={notify} />} />
             <Route path="/settings" element={<Settings notify={notify} />} />
             <Route path="/todos" element={<Todos notify={notify} />} />
-            <Route path="/schedules" element={<Schedules notify={notify} />} />
+            <Route path="/schedules" element={<Schedules notify={notify} familyMembers={familyMembers} />} />
             <Route path="/shifts" element={<Shifts notify={notify} />} />
             <Route path="/chores" element={<Chores notify={notify} />} />
             <Route path="/notification-settings" element={<NotificationSettings familyMembers={familyMembers} />} />
             <Route path="/weatherinfo" element={<WeatherInfo />} />
             <Route path="/forecast" element={<Forecast />} />
-            <Route path="/calendar" element={<CalendarFull notify={notify} firstname={firstname} familyMembers={familyMembers} />} />
+            <Route path="/calendar" element={<CalendarFull notify={notify} familyMembers={familyMembers} />} />
         </>
     )
 }

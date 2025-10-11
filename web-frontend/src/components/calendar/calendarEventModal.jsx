@@ -42,16 +42,6 @@ const CalendarEventModal = ({ show, handleClose, date, onSave, onDelete, eventTo
     }
   }, [show, eventToEdit, date])
 
-  /*useEffect(() => {
-    if (!show) return
-    const initial = (rules || [])
-      .filter(r => r?.canView)
-      .map(r => r.userId)
-    const withSelf = currentUser?.id ? Array.from(new Set([...(initial || []), currentUser.id])) : initial
-    setUserWithView(withSelf)
-    setOnlyMe(withSelf?.length === 1 && withSelf[0] === currentUser?.id)
-  }, [show, rules])*/
-
   useEffect(() => {
     setOnlyMe(userWithView.length === 1 && userWithView.includes(currentUser.id))
   }, [userWithView])

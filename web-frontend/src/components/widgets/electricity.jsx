@@ -82,7 +82,7 @@ export const ElectricityWidget = ({ notify, familyMembers }) => {
     })
     return nextPriceObj?.price ?? null
   }
-
+console.log(familyMembers.map(user => user?.notifications.electricity))
   useEffect(() => {
     if (!future?.futurePrices || !data?.notificationSettings?.electricity) return
 
@@ -93,9 +93,9 @@ export const ElectricityWidget = ({ notify, familyMembers }) => {
       prevPriceRef.current = currentPrice
       return
     }
-
+//NOTIFICATIONS EI PÄIVITY TÄÄLLÄ FAMILYMEMBERSIIN AJOISSA!!!!!!!!!!!!!!!
     const electricitySubscriptions = Object.fromEntries(
-      data.notificationSettings.electricity.map(e => [e.userId, e.enabled])
+      data?.notificationSettings?.electricity.map(e => [e.userId, e.enabled])
     )
 
     familyMembers.forEach(user => {

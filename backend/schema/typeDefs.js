@@ -4,15 +4,15 @@ const typeDefs = gql`
 
   type UserSettingEntry {
     userId: ID!
-    enabled: Boolean!
-    canManage: Boolean!
-    mobileNotifications: Boolean!
+    enabled: Boolean
+    canManage: Boolean
+    mobileNotifications: Boolean
   }
 
   type NotificationSettings {
     id: ID!
     familyId: ID!
-    wilma: [UserSettingEntry!]!
+    wilma: [UserSettingEntry]
     electricity: [UserSettingEntry]
     calendar: [UserSettingEntry]
     shopping: [UserSettingEntry]
@@ -42,7 +42,7 @@ const typeDefs = gql`
     emailVerificationToken: String
     emailVerificationTokenExpiry: String
     familyId: ID!
-    notificationPermissions: NotificationPermissions
+    notifications: NotificationSettings
     invitedUserId: ID
   }
 
@@ -74,21 +74,6 @@ const typeDefs = gql`
 
   type LatestPrices {
     prices: [Price]
-  }
-
-  type NotificationPermissionEntry {
-    enabled: Boolean!
-    canManage: Boolean!
-    mobileNotifications: Boolean!
-  }
-
-  type NotificationPermissions {
-    wilma: NotificationPermissionEntry!
-    electricity: NotificationPermissionEntry!
-    calendar: NotificationPermissionEntry!
-    shopping: NotificationPermissionEntry!
-    todo: NotificationPermissionEntry!
-    chores: NotificationPermissionEntry!
   }
 
   type InvitedUser {
@@ -144,6 +129,7 @@ const typeDefs = gql`
     userAccessRule(resourceType: String!, resourceId: ID!, userId: ID!, creatorId: ID!): AccessRule
     calendarEntries(familyId: ID!): [CalendarEntry!]!
     calendarEntry(id: ID!): CalendarEntry
+    getWilmaCalendar: [WilmaCalendarEvent!]!
   }
 
   type Family {
@@ -152,7 +138,7 @@ const typeDefs = gql`
     owner: User!
     birthday: String
     members: [User!]!
-    notificationPermissions: NotificationPermissions
+    notifications: NotificationSettings
   }
 
   type Token {
@@ -179,6 +165,30 @@ const typeDefs = gql`
     invitedUserId: ID!
   }
 
+  type WilmaCalendarEvent {
+    title: String!
+    start: String!
+    end: String!
+    teacher: String
+    room: String
+    owner: String!
+  }
+
+  type WilmaSchedule {
+    familyId: String!
+    url: String!
+    owner: String!
+    users: [WilmaUser!]!
+  }
+
+  type WilmaUser {
+    id: String!
+  }
+
+  input WilmaUserEntry {
+    id: String!
+  }
+
   type Mutation {
     login(username: String!, password: String!): Token
     createUser(username: String!, password: String!, name: String!, parent: Boolean!, familyId: ID, invitedUserId: ID): User
@@ -189,7 +199,7 @@ const typeDefs = gql`
     updatePassword(newPassword: String, token: String): User
     verifyEmailOrInvite(token: String, familyId: String): User
     requestPasswordReset(email: String!): Boolean
-    updateNotificationSettings(familyId: ID, userId: ID!, type: String!, enabled: Boolean, canManage: Boolean, mobileNotifications: Boolean): UserSettingEntry
+    updateNotifications(familyId: ID, userId: ID!, type: String!, enabled: Boolean, canManage: Boolean, mobileNotifications: Boolean): UserSettingEntry
     resendEmailVerificationToken(email: String!): Boolean
     updateParent(userId: ID!, parent: Boolean!): User
     updateBirthday(userId: ID!, birthday: String): User
@@ -198,6 +208,7 @@ const typeDefs = gql`
     createCalendarEntry(familyId: ID!, input: CalendarEntryInput!): CalendarEntry!
     updateCalendarEntry(id: ID!, input: CalendarEntryInput!): CalendarEntry!
     deleteCalendarEntry(id: ID!): Boolean!
+    importWilmaCalendar(icalUrl: String!, owner: String!, users: [WilmaUserEntry!]!): WilmaSchedule!
   }
 `
 

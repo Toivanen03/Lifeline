@@ -21,6 +21,7 @@ import { GET_FLAGDAYS, GET_IRREGULAR_FLAGDAYS, GET_NAMEDAYS } from "../../schema
 import { InfoModal } from "../calendar/calendarEventEngine"
 import { AuthContext } from "../../contexts/AuthContext"
 import { AccessManagementProvider } from "../../contexts/AccessManagementContext"
+import finFlag from '../../assets/finFlag.png'
 
 const CalendarFull = ({ notify, familyMembers }) => {
   const { currentDate, setCurrentDate, selectedDate, setSelectedDate, highlightedDate, setHighlightedDate } = useCalendarDay()
@@ -197,7 +198,7 @@ const CalendarFull = ({ notify, familyMembers }) => {
         <div className="row">
           <div className={animatedClass}>
             <div className="row">
-              <span className="mb-1"><b>Nimipäivä tänään:</b></span>
+              <span className="mb-1"><b>{flagdayToday ? <span><img src={finFlag} style={{width: '30px'}} className="me-2" />{flagdayToday}</span> : "Nimipäivä tänään:"}</b></span>
               <span>{namedayToday.join(`,\n`) + "."}</span>
             </div>
           </div>

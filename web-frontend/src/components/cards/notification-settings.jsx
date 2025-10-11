@@ -8,7 +8,7 @@ import { motion } from "framer-motion"
 
 const NotificationSettings = ({ familyMembers }) => {
   const { currentUser } = useContext(AuthContext)
-  const [updateNotificationSettings] = useMutation(UPDATE_NOTIFICATION_SETTINGS)
+  const [updateNotifications] = useMutation(UPDATE_NOTIFICATION_SETTINGS)
 
   const notificationTypes = [
     { type: "electricity", title: "Sähkön hinta" },
@@ -42,7 +42,7 @@ const NotificationSettings = ({ familyMembers }) => {
                     type={n.type}
                     title={n.title}
                     currentUser={currentUser}
-                    updateNotificationSettings={updateNotificationSettings}
+                    updateNotifications={updateNotifications}
                     familyMembers={familyMembers}
                   />
                 ))}
@@ -58,7 +58,7 @@ const NotificationSettings = ({ familyMembers }) => {
                     type={n.type}
                     title={n.title}
                     currentUser={currentUser}
-                    updateNotificationSettings={updateNotificationSettings}
+                    updateNotifications={updateNotifications}
                     familyMembers={familyMembers}
                   />
                 ))}

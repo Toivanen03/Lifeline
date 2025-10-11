@@ -78,30 +78,30 @@ const Settings = ({ notify }) => {
 
 {/* SÄÄTIEDOT ON/OFF */}
                     {mainSettings.showRightPanel && (
-                    <div className="col-7 form-check form-switch d-flex justify-content-between align-items-center mb-3">
-                    <h5 className="form-check-label mb-0">Näytä säätiedot</h5>
-                        <input
-                            className="form-check-input"
-                            id="showWeatherSwitch"
-                            type="checkbox"
-                            checked={mainSettings.showWeather}
-                            onChange={() => toggle('showWeather')}
-                        />
-                    </div>
-                    )}
-                    {mainSettings.showRightPanel && mainSettings.showWeather &&(
-                    <>
-                    {settingsList.map(s => (
-                        <div key={s.key} className="col-7 form-check form-switch d-flex justify-content-between align-items-center mb-3">
-                            <label htmlFor={`${s.key}Switch`} className="form-check-label mb-0 ms-4">{s.label}</label>
+                        <div className="col-7 form-check form-switch d-flex justify-content-between align-items-center mb-3">
+                        <h5 className="form-check-label mb-0">Näytä säätiedot</h5>
                             <input
-                                id={`${s.key}Switch`}
-                                type="checkbox"
                                 className="form-check-input"
-                                checked={mainSettings[s.key]}
-                                onChange={() => toggle(s.key)}
+                                id="showWeatherSwitch"
+                                type="checkbox"
+                                checked={mainSettings.showWeather}
+                                onChange={() => toggle('showWeather')}
                             />
                         </div>
+                    )}
+                    {mainSettings.showRightPanel && mainSettings.showWeather && (
+                    <>
+                        {settingsList.map(s => (
+                            <div key={s.key} className="col-7 form-check form-switch d-flex justify-content-between align-items-center mb-3">
+                                <label htmlFor={`${s.key}Switch`} className="form-check-label mb-0 ms-4">{s.label}</label>
+                                <input
+                                    id={`${s.key}Switch`}
+                                    type="checkbox"
+                                    className="form-check-input"
+                                    checked={mainSettings[s.key]}
+                                    onChange={() => toggle(s.key)}
+                                />
+                            </div>
                         ))}
                     </>
                     )}
@@ -111,7 +111,7 @@ const Settings = ({ notify }) => {
 
 {/* KALENTERIN ASETUKSET */}
                     <h2 className="mt-3 mb-3 align-self-start">Kalenterin asetukset</h2>
-                    <CalendarSettings />
+                    <CalendarSettings notify={notify} />
 {/* MUUT ASETUKSET */}
                     <h2 className="mt-3 mb-3 align-self-start">Käyttäjätilin asetukset</h2>
                     <UserSettings notify={notify} />

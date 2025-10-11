@@ -106,7 +106,7 @@ export const FAMILY = gql`
         parent
         owner
         birthday
-        notificationPermissions {
+        notifications {
           wilma { enabled canManage mobileNotifications }
           electricity { enabled canManage mobileNotifications }
           calendar { enabled canManage mobileNotifications }
@@ -129,7 +129,7 @@ export const USERS = gql`
       emailVerified
       owner
       birthday
-      notificationPermissions {
+      notifications {
         wilma { enabled canManage mobileNotifications }
         electricity { enabled canManage mobileNotifications }
         calendar { enabled canManage mobileNotifications }
@@ -181,7 +181,7 @@ export const UPDATE_NOTIFICATION_SETTINGS = gql`
     $canManage: Boolean
     $mobileNotifications: Boolean
   ) {
-    updateNotificationSettings(
+    updateNotifications(
       familyId: $familyId, 
       userId: $userId, 
       type: $type, 
@@ -466,5 +466,32 @@ export const UPDATE_CALENDAR_ENTRY = gql`
 export const DELETE_CALENDAR_ENTRY = gql`
   mutation deleteCalendarEntry($id: ID!) {
     deleteCalendarEntry(id: $id)
+  }
+`
+
+
+export const IMPORT_WILMA_CALENDAR = gql`
+  mutation ImportWilmaCalendar($icalUrl: String!, $owner: String!, $users: [WilmaUserEntry!]!) {
+    importWilmaCalendar(icalUrl: $icalUrl, owner: $owner, users: $users) {
+      familyId
+      url
+      owner
+      users {
+        id
+      }
+    }
+  }
+`
+
+export const GET_WILMA_CALENDAR = gql`
+  query getWilmaCalendar {
+    getWilmaCalendar {
+      title
+      start
+      end
+      teacher
+      room
+      owner
+    }
   }
 `

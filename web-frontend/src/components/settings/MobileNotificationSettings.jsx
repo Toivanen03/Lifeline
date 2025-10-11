@@ -1,7 +1,7 @@
 import { NOTIFICATION_SETTINGS } from "../../schema/queries"
 import { useQuery } from "@apollo/client/react"
 
-const MobileNotificationSettings = ({ type, title, updateNotificationSettings, currentUser, familyMembers }) => {
+const MobileNotificationSettings = ({ type, title, updateNotifications, currentUser, familyMembers }) => {
   const { data: settingsData, refetch: refetchSettings } = useQuery(NOTIFICATION_SETTINGS, {
     skip: !currentUser
   })
@@ -60,7 +60,7 @@ const MobileNotificationSettings = ({ type, title, updateNotificationSettings, c
                     disabled={!allowed}
                     onChange={async () => {
                       try {
-                        await updateNotificationSettings({
+                        await updateNotifications({
                           variables: {
                             familyId: currentUser.familyId,
                             userId: u.id,
@@ -86,7 +86,7 @@ const MobileNotificationSettings = ({ type, title, updateNotificationSettings, c
                       disabled={!allowed || isSelf}
                       onChange={async () => {
                         try {
-                          await updateNotificationSettings({
+                          await updateNotifications({
                             variables: {
                               familyId: currentUser.familyId,
                               userId: u.id,

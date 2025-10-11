@@ -7,6 +7,7 @@ import InvitedUser from '../models/InvitedUser.js'
 import GlobalNamedayEntries from '../models/GlobalNamedayEntries.js'
 import GlobalFlagdayEntries from '../models/GlobalFlagdayEntries.js'
 import NotificationSettings from '../models/Notification.js'
+import Wilma from '../models/Wilma.js'
 import AccessRule from '../models/AccessManagement.js'
 import CalendarEntry from '../models/CalendarEntry.js'
 import { calculateFlagDays } from '../data/flagDays/calculateVariableFlagdays.js'
@@ -15,6 +16,7 @@ import { GraphQLError } from 'graphql'
 import { z } from 'zod'
 import fetch from 'node-fetch'
 import MailSender from '../utils/mailer.js'
+import ical from 'ical'
 
 const LATEST_PRICES_ENDPOINT = 'https://api.porssisahko.net/v1/latest-prices.json'
 
@@ -45,43 +47,31 @@ const categories = ['wilma', 'electricity','calendar','shopping','todo','chores'
 const attachNotificationSettings = (users, settings) => {
   return users.map(user => {
     const perms = settings
-      ? {
-          wilma: {
-            enabled: settings.wilma.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false,
-            canManage: settings.wilma.find(e => e.userId.toString() === user._id.toString())?.canManage ?? true,
-            mobileNotifications: settings.wilma.find(e => e.userId.toString() === user._id.toString())?.mobileNotifications ?? true
-          },
-          electricity: {
-            enabled: settings.electricity.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false,
-            canManage: settings.electricity.find(e => e.userId.toString() === user._id.toString())?.canManage ?? true,
-            mobileNotifications: settings.electricity.find(e => e.userId.toString() === user._id.toString())?.mobileNotifications ?? true
-          },
-          calendar: {
-            enabled: settings.calendar.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false,
-            canManage: settings.calendar.find(e => e.userId.toString() === user._id.toString())?.canManage ?? true,
-            mobileNotifications: settings.calendar.find(e => e.userId.toString() === user._id.toString())?.mobileNotifications ?? true
-          },
-          shopping: {
-            enabled: settings.shopping.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false,
-            canManage: settings.shopping.find(e => e.userId.toString() === user._id.toString())?.canManage ?? true,
-            mobileNotifications: settings.shopping.find(e => e.userId.toString() === user._id.toString())?.mobileNotifications ?? true
-          },
-          todo: {
-            enabled: settings.todo.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false,
-            canManage: settings.todo.find(e => e.userId.toString() === user._id.toString())?.canManage ?? true,
-            mobileNotifications: settings.todo.find(e => e.userId.toString() === user._id.toString())?.mobileNotifications ?? true
-          },
-          chores: {
-            enabled: settings.chores.find(e => e.userId.toString() === user._id.toString())?.enabled ?? false,
-            canManage: settings.chores.find(e => e.userId.toString() === user._id.toString())?.canManage ?? true,
-            mobileNotifications: settings.chores.find(e => e.userId.toString() === user._id.toString())?.mobileNotifications ?? true
-          }
+      ? Object.fromEntries(
+          ["wilma", "electricity", "calendar", "shopping", "todo", "chores"].map(type => {
+            const entry = settings[type].find(e => e.userId.toString() === user._id.toString())
+            return [
+              type,
+              {
+                enabled: entry?.enabled ?? false,
+                canManage: entry?.canManage ?? true,
+                mobileNotifications: entry?.mobileNotifications ?? true
+              }
+            ]
+          })
+        )
+      : {
+          wilma: { enabled: false, canManage: true, mobileNotifications: true },
+          electricity: { enabled: false, canManage: true, mobileNotifications: true },
+          calendar: { enabled: false, canManage: true, mobileNotifications: true },
+          shopping: { enabled: false, canManage: true, mobileNotifications: true },
+          todo: { enabled: false, canManage: true, mobileNotifications: true },
+          chores: { enabled: false, canManage: true, mobileNotifications: true },
         }
-      : {}
 
     return {
       ...user.toObject(),
-      notificationPermissions: perms
+      notifications: perms
     }
   })
 }
@@ -161,6 +151,7 @@ const resolvers = {
           parent: ownerWithPermissions.parent,
           emailVerified: ownerWithPermissions.emailVerified,
           familyId: ownerWithPermissions.familyId?.toString(),
+          notifications: ownerWithPermissions.notifications
         },
         members: membersWithNotifications.map(m => ({
           id: m._id.toString(),
@@ -170,7 +161,8 @@ const resolvers = {
           emailVerified: m.emailVerified,
           familyId: m.familyId?.toString(),
           owner: family.owner._id.toString() === m._id.toString(),
-          birthday: m.birthday
+          birthday: m.birthday,
+          notifications: m.notifications
         }))
       }
     },
@@ -302,14 +294,16 @@ const resolvers = {
       }))
     },
 
-    notificationSettings: async (_root, { category }, context) => {
+    notificationSettings: async (_root, context) => {
       const currentUser = context.currentUser
       if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
 
-      let settings = await NotificationSettings.findOne({ familyId: currentUser.familyId })
+      const familyId = currentUser.familyId
+      let settings = await NotificationSettings.findOne({ familyId })
+
       if (!settings) {
         settings = new NotificationSettings({
-          familyId: currentUser.familyId,
+          familyId,
           wilma: [],
           electricity: [],
           calendar: [],
@@ -320,12 +314,48 @@ const resolvers = {
         await settings.save()
       }
 
-      if (category && categories.includes(category)) {
-        return { familyId: settings.familyId, [category]: settings[category] }
-      }
-
       return settings
     },
+
+    getWilmaCalendar: async (_, __, context) => {
+      if (!context.currentUser) throw new Error("Ei kirjautunutta käyttäjää")
+
+      const schedules = await Wilma.find({ familyId: context.currentUser.familyId })
+      if (!schedules.length) return []
+
+      let allEvents = []
+
+      for (const schedule of schedules) {
+        if (schedule.users && !schedule.users.some(u => u.id === context.currentUser.id)) {
+          continue
+        }
+
+        if (!schedule.url) continue
+
+        try {
+          const response = await fetch(schedule.url)
+          const text = await response.text()
+          const data = ical.parseICS(text)
+
+          const events = Object.values(data)
+            .filter(e => e.type === 'VEVENT')
+            .map(e => ({
+              title: e.summary,
+              start: e.start.toISOString(),
+              end: e.end.toISOString(),
+              teacher: e.description?.match(/Opettaja: (.*)/)?.[1] || null,
+              room: e.location || null,
+              owner: schedule.owner
+            }))
+
+          allEvents = allEvents.concat(events)
+
+        } catch (err) {
+          console.error(`Virhe haettaessa lukujärjestystä ${schedule._id}:`, err)
+        }
+      }
+      return allEvents
+    }
   },
 
   Mutation: {
@@ -573,7 +603,7 @@ const resolvers = {
       return invitedUser
     },
 
-    updateNotificationSettings: async (_root, { familyId, userId, type, enabled, canManage, mobileNotifications }, context) => {
+    updateNotifications: async (_root, { familyId, userId, type, enabled, canManage, mobileNotifications }, context) => {
       const currentUser = context.currentUser
       if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
 
@@ -604,7 +634,7 @@ const resolvers = {
         if (canManage !== undefined) existing.canManage = canManage
         if (mobileNotifications !== undefined) existing.mobileNotifications = mobileNotifications
       } else {
-        settings[type].push({ userId, enabled: enabled ?? true, canManage: canManage ?? true, mobileNotifications: mobileNotifications ?? true })
+        settings[type].push({ userId, enabled: enabled ?? false, canManage: canManage ?? false, mobileNotifications: mobileNotifications ?? false })
       }
 
       await settings.save()
@@ -759,6 +789,33 @@ const resolvers = {
       await CalendarEntry.findByIdAndDelete(id)
       await AccessRule.deleteMany({ resourceType: 'calendarEvent', resourceId: id })
       return true
+    },
+
+    importWilmaCalendar: async (_, { icalUrl, owner, users }, { currentUser }) => {
+      if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
+
+      let data
+      try {
+        const response = await fetch(icalUrl)
+        if (!response.ok) throw new Error("iCal URL ei saatavilla")
+
+        const text = await response.text()
+        data = ical.parseICS(text)
+      } catch (err) {
+        throw new Error("Virheellinen iCal-URL: " + err.message)
+      }
+
+      const events = Object.values(data).filter(e => e.type === 'VEVENT')
+      if (!events.length) throw new Error("iCal URL ei sisältänyt tapahtumia")
+
+      const schedule = await Wilma.create({
+        familyId: currentUser.familyId,
+        url: icalUrl,
+        owner,
+        users
+      })
+
+      return schedule
     }
   }
 }

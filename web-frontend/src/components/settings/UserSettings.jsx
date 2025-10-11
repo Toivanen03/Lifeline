@@ -5,7 +5,7 @@ import { DELETE_FAMILY, FAMILY } from "../../schema/queries"
 import { AuthContext } from '../../contexts/AuthContext'
 
 const UserSettings = ({ notify }) => {
-  const { logout, currentUser, isOwner } = useContext(AuthContext)
+  const { logout, currentUser } = useContext(AuthContext)
   const [deleteFamily] = useMutation(DELETE_FAMILY, {
     onCompleted: () => {
       notify(`Perhe ${familyData?.family?.name} poistettu onnistuneesti.`, "info")
