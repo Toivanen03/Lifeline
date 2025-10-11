@@ -495,3 +495,11 @@ export const GET_WILMA_CALENDAR = gql`
     }
   }
 `
+
+export const DELETE_WILMA_CALENDAR = gql`
+  mutation deleteWilmaCalendar($owner: ID!) {
+      deleteWilmaCalendar(owner: $owner) {
+        url
+    }
+  }
+`

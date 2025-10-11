@@ -8,11 +8,11 @@ import fiLocale from "@fullcalendar/core/locales/fi"
 import { Button } from "react-bootstrap"
 import { Modal } from "react-bootstrap"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faChevronRight, faTrashCan } from '@fortawesome/free-solid-svg-icons'
 import { useContext, useRef, useState, useEffect } from "react"
 import { useCalendarDay } from "../../contexts/CalendarDayContext"
 import { AuthContext } from "../../contexts/AuthContext"
-import { IMPORT_WILMA_CALENDAR, GET_WILMA_CALENDAR } from "../../schema/queries"
+import { IMPORT_WILMA_CALENDAR, GET_WILMA_CALENDAR, DELETE_WILMA_CALENDAR } from "../../schema/queries"
 import { useMutation, useQuery } from "@apollo/client/react"
 import WilmaLogo from '../../assets/Wilma_logo.png'
 import Dropdown from "react-bootstrap/Dropdown"
@@ -25,13 +25,16 @@ const Schedules = ({ notify, familyMembers }) => {
     const [selectedEvent, setSelectedEvent] = useState(null)
     const [showModal, setShowModal] = useState(false)
     const [wilmaUrl, setWilmaUrl] = useState("")
-    const { data: wilmaData, loading: wilmaLoading, error: wilmaError, refetch: wilmaRefetch } = useQuery(GET_WILMA_CALENDAR)
+    const { data: wilmaData, loading: wilmaLoading, refetch: wilmaRefetch } = useQuery(GET_WILMA_CALENDAR)
     const [importWilmaCalendar] = useMutation(IMPORT_WILMA_CALENDAR)
     const { currentDate, setCurrentDate } = useCalendarDay()
     const [showLegend, setShowLegend] = useState(true)
     const [view, setView] = useState("timeGridWeek")
     const calendarRef = useRef(null)
     const [scheduleOwner, setScheduleOwner] = useState("")
+    const [deleteWilmaCalendar] = useMutation(DELETE_WILMA_CALENDAR, {
+        refetchQueries: [{ query: GET_WILMA_CALENDAR }],
+    })
     const [wilmaVisible, setWilmaVisible] = useState(
         Object.fromEntries(familyMembers.map(m => [m.id, false]))
     )
@@ -65,7 +68,7 @@ const Schedules = ({ notify, familyMembers }) => {
                 className: 'locked',
                 backgroundColor: ownerColors[e.owner],
                 borderColor: ownerColors[e.owner],
-                extendedProps: { teacher: e.teacher, room: e.room }
+                extendedProps: { teacher: e.teacher, room: e.room, owner: e.owner },
             }))
             setWilmaEvents(events)
         }
@@ -103,6 +106,21 @@ const Schedules = ({ notify, familyMembers }) => {
             setShowLegend(true)
             setScheduleOwner("")
         }
+    }
+
+    const handleDelete = async (owner) => {
+        if (window.confirm("Haluatko varmasti poistaa lukujärjestyksen?"))
+            try {
+                const { data } = await deleteWilmaCalendar({
+                    variables: { owner }
+                })
+
+                if (data) {
+                    notify(`Lukujärjestys ${data?.deleteWilmaCalendar?.url?.split('.fi/')[0]}.fi/ poistettu`, "success")
+                }
+            } catch (err) {
+                notify(`VIRHE: ${err.message}`, "error")
+            }
     }
 
     const handleScheduleOwnerChange = (id) => {
@@ -235,12 +253,40 @@ const Schedules = ({ notify, familyMembers }) => {
                     {showLegend && (
                         <div className="col-4">
                             <div className="row">
-                                <div className="col-12 legend">
-                                    {familyMembers.map(m => (
-                                        <div key={m.id} style={{ display: 'flex', alignItems: 'center', marginBottom: 3 }}>
-                                            <div style={{ width: 16, height: 16, backgroundColor: ownerColors[m.id], marginRight: 8 }}></div>
-                                            <span>{m.name.split(' ')[0]}</span>
+                                <div className="col-12">
+                                {familyMembers
+                                    .filter(member => wilmaEvents.some(event => event.extendedProps?.owner === member.id))
+                                    .map(m => (
+                                        <div
+                                            key={m.id}
+                                            style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            marginBottom: 3
+                                            }}
+                                        >
+                                        <div
+                                        style={{
+                                            width: 16,
+                                            height: 16,
+                                            backgroundColor: ownerColors[m.id],
+                                        }}
+                                        ></div>
+                                        <div className="row w-100 align-items-center">
+                                            <div className="col-4 text-start">
+                                                <span className="ms-3">{m.name.split(" ")[0]}</span>
+                                            </div>
+                                            <div className="col-6 text-start">
+                                                <button
+                                                    className="btn btn-sm text-danger"
+                                                    style={{border: 'none'}}
+                                                    onClick={() => handleDelete(m.id)}
+                                                    >
+                                                    <FontAwesomeIcon icon={faTrashCan} />
+                                                </button>
+                                            </div>
                                         </div>
+                                    </div>
                                     ))}
                                 </div>
                             </div>
@@ -357,7 +403,14 @@ const Schedules = ({ notify, familyMembers }) => {
             </div>
             <Modal show={showModal} onHide={() => setShowModal(false)}>
                 <Modal.Header>
-                    <Modal.Title>{selectedEvent?.title}</Modal.Title>
+                    <Modal.Title className="row w-100">
+                        <div className="col-6">
+                            {selectedEvent?.title}
+                        </div>
+                        <div className="col-6 text-end">
+                            <span style={{color: ownerColors[selectedEvent?.extendedProps?.owner]}}>{familyMembers.find(user => user.id === selectedEvent?.extendedProps?.owner)?.name.split(' ')[0]}</span>
+                        </div>
+                        </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <div className="row">

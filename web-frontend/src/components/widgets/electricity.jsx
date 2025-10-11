@@ -30,7 +30,7 @@ const saveCache = (data) => {
 }
 
 export const ElectricityWidget = ({ notify, familyMembers }) => {
-  const { data } = useQuery(NOTIFICATION_SETTINGS)
+//  const { data } = useQuery(NOTIFICATION_SETTINGS)
   const { electricitySettings } = useElectricitySettings()
   const prevPriceRef = useRef(null)
   const [tick, setTick] = useState(0)
@@ -82,9 +82,9 @@ export const ElectricityWidget = ({ notify, familyMembers }) => {
     })
     return nextPriceObj?.price ?? null
   }
-console.log(familyMembers.map(user => user?.notifications.electricity))
+
   useEffect(() => {
-    if (!future?.futurePrices || !data?.notificationSettings?.electricity) return
+    if (!future?.futurePrices || !familyMembers.map(user => user?.notifications?.electricity)) return
 
     const currentPrice = getCurrentPrice(future)
     const nextPriceVal = getNextHourPrice(future)
@@ -93,10 +93,8 @@ console.log(familyMembers.map(user => user?.notifications.electricity))
       prevPriceRef.current = currentPrice
       return
     }
-//NOTIFICATIONS EI PÄIVITY TÄÄLLÄ FAMILYMEMBERSIIN AJOISSA!!!!!!!!!!!!!!!
-    const electricitySubscriptions = Object.fromEntries(
-      data?.notificationSettings?.electricity.map(e => [e.userId, e.enabled])
-    )
+    
+    const electricitySubscriptions = familyMembers?.map(e => [e.userId, e.enabled])
 
     familyMembers.forEach(user => {
       if (!electricitySubscriptions[user.id]) return
@@ -132,7 +130,7 @@ console.log(familyMembers.map(user => user?.notifications.electricity))
         )
       }
     })
-  }, [future, data, electricitySettings, notify, tick, familyMembers])
+  }, [future, electricitySettings, notify, tick, familyMembers])
 
   useEffect(() => {
     const updateAtFullHour = () => setTick(t => t + 1)

@@ -189,6 +189,10 @@ const typeDefs = gql`
     id: String!
   }
 
+  type DeletedSchedule {
+    url: String!
+  }
+
   type Mutation {
     login(username: String!, password: String!): Token
     createUser(username: String!, password: String!, name: String!, parent: Boolean!, familyId: ID, invitedUserId: ID): User
@@ -209,6 +213,7 @@ const typeDefs = gql`
     updateCalendarEntry(id: ID!, input: CalendarEntryInput!): CalendarEntry!
     deleteCalendarEntry(id: ID!): Boolean!
     importWilmaCalendar(icalUrl: String!, owner: String!, users: [WilmaUserEntry!]!): WilmaSchedule!
+    deleteWilmaCalendar(owner: ID!): DeletedSchedule
   }
 `
 

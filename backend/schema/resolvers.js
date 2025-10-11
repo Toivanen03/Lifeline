@@ -294,7 +294,7 @@ const resolvers = {
       }))
     },
 
-    notificationSettings: async (_root, context) => {
+    notificationSettings: async (_root, __, context) => {
       const currentUser = context.currentUser
       if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
 
@@ -662,7 +662,6 @@ const resolvers = {
     ,
 
     upsertAccessRule: async (_root, { resourceType, resourceId, userId, canView }, context) => {
-      console.log(resourceId)
       const currentUser = context.currentUser
       if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
 
@@ -793,7 +792,10 @@ const resolvers = {
 
     importWilmaCalendar: async (_, { icalUrl, owner, users }, { currentUser }) => {
       if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
-
+      const schedules = await Wilma.find({ familyId: currentUser.familyId })
+      if (schedules.some(schedule => schedule.url === icalUrl)) {
+        throw new Error("Tämä lukujärjestys on jo lisätty.")
+      }
       let data
       try {
         const response = await fetch(icalUrl)
@@ -816,6 +818,17 @@ const resolvers = {
       })
 
       return schedule
+    },
+
+    deleteWilmaCalendar: async (_, { owner }, { currentUser }) => {
+      if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
+
+      const schedule = await Wilma.findOne({ owner, familyId: currentUser.familyId })
+      if (!schedule) throw new Error("Lukujärjestystä ei löytynyt tai ei oikeuksia poistaa")
+
+      await Wilma.findOneAndDelete({ _id: schedule._id })
+
+      return { url: schedule.url }
     }
   }
 }

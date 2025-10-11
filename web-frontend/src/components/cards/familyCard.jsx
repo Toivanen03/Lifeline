@@ -4,7 +4,7 @@ import { useQuery, useMutation } from "@apollo/client/react"
 import { validateEmail } from "../../schema/validateUserData"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons'
-import { hover, motion } from "framer-motion"
+import { motion } from "framer-motion"
 import { useNavigate } from "react-router-dom"
 import { GET_INVITED_USERS, UPDATE_PARENT, DELETE_USER, CANCEL_INVITATION } from "../../schema/queries"
 
