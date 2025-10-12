@@ -282,21 +282,21 @@ const Schedules = ({ notify, familyMembers }) => {
                                             style={{
                                             display: "flex",
                                             alignItems: "center",
-                                            marginBottom: 3
-                                            }}
-                                        >
-                                        <div
-                                        style={{
-                                            width: 16,
-                                            height: 16,
-                                            backgroundColor: ownerColors[m.id],
-                                        }}
-                                        ></div>
-                                        <div className="row w-100 align-items-center">
+                                            marginBottom: 3,
+                                            className: "row"
+                                            }}>
+                                            <div
+                                            className="col-1"
+                                            style={{
+                                                width: 16,
+                                                height: 16,
+                                                backgroundColor: ownerColors[m.id],
+                                            }}>
+                                            </div>
                                             <div className="col-4 text-start">
                                                 <span className="ms-3">{m.name.split(" ")[0]}</span>
                                             </div>
-                                            <div className="col-6 text-start">
+                                            <div className="col-1 text-start">
                                                 <button
                                                     className="btn btn-sm text-danger"
                                                     style={{border: 'none'}}
@@ -306,7 +306,6 @@ const Schedules = ({ notify, familyMembers }) => {
                                                 </button>
                                             </div>
                                         </div>
-                                    </div>
                                     ))}
                                 </div>
                             </div>

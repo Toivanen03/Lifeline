@@ -655,7 +655,7 @@ const resolvers = {
 
       await settings.save()
 
-      return settings
+      return settings[type]
     },
 
     deleteFamily: async (_root, { familyId }, context) => {
