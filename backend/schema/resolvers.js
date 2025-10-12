@@ -8,6 +8,7 @@ import GlobalNamedayEntries from '../models/GlobalNamedayEntries.js'
 import GlobalFlagdayEntries from '../models/GlobalFlagdayEntries.js'
 import NotificationSettings from '../models/Notification.js'
 import Wilma from '../models/Wilma.js'
+import Schedule from '../models/Schedule.js'
 import AccessRule from '../models/AccessManagement.js'
 import CalendarEntry from '../models/CalendarEntry.js'
 import { calculateFlagDays } from '../data/flagDays/calculateVariableFlagdays.js'
@@ -48,26 +49,35 @@ const attachNotificationSettings = (users, settings) => {
   return users.map(user => {
     const perms = settings
       ? Object.fromEntries(
-          ["wilma", "electricity", "calendar", "shopping", "todo", "chores"].map(type => {
-            const entry = settings[type].find(e => e.userId.toString() === user._id.toString())
+          categories.map(type => {
+            const entries = settings[type] || []
+            const entry = entries.find(e => e.userId?.toString() === user._id.toString()) || {}
             return [
               type,
-              {
-                enabled: entry?.enabled ?? false,
-                canManage: entry?.canManage ?? true,
-                mobileNotifications: entry?.mobileNotifications ?? true
-              }
+              [
+                {
+                  userId: user._id,
+                  enabled: entry.enabled ?? false,
+                  canManage: entry.canManage ?? true,
+                  mobileNotifications: entry.mobileNotifications ?? true
+                }
+              ]
             ]
           })
         )
-      : {
-          wilma: { enabled: false, canManage: true, mobileNotifications: true },
-          electricity: { enabled: false, canManage: true, mobileNotifications: true },
-          calendar: { enabled: false, canManage: true, mobileNotifications: true },
-          shopping: { enabled: false, canManage: true, mobileNotifications: true },
-          todo: { enabled: false, canManage: true, mobileNotifications: true },
-          chores: { enabled: false, canManage: true, mobileNotifications: true },
-        }
+      : Object.fromEntries(
+          categories.map(type => [
+            type,
+            [
+              {
+                userId: user._id,
+                enabled: false,
+                canManage: true,
+                mobileNotifications: true
+              }
+            ]
+          ])
+        )
 
     return {
       ...user.toObject(),
@@ -299,25 +309,18 @@ const resolvers = {
       if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
 
       const familyId = currentUser.familyId
+      const members = await User.find({ familyId })
       let settings = await NotificationSettings.findOne({ familyId })
 
       if (!settings) {
-        settings = new NotificationSettings({
-          familyId,
-          wilma: [],
-          electricity: [],
-          calendar: [],
-          shopping: [],
-          todo: [],
-          chores: []
-        })
+        settings = new NotificationSettings(attachNotificationSettings(members, settings))
         await settings.save()
       }
 
       return settings
     },
 
-    getWilmaCalendar: async (_, __, context) => {
+    getWilmaSchedule: async (_, __, context) => {
       if (!context.currentUser) throw new Error("Ei kirjautunutta käyttäjää")
 
       const schedules = await Wilma.find({ familyId: context.currentUser.familyId })
@@ -343,9 +346,11 @@ const resolvers = {
               title: e.summary,
               start: e.start.toISOString(),
               end: e.end.toISOString(),
-              teacher: e.description?.match(/Opettaja: (.*)/)?.[1] || null,
-              room: e.location || null,
-              owner: schedule.owner
+              extendedProps: {
+                teacher: e.description?.match(/Opettaja: (.*)/)?.[1] || null,
+                room: e.location || null,
+                owner: schedule.owner
+              }
             }))
 
           allEvents = allEvents.concat(events)
@@ -355,6 +360,23 @@ const resolvers = {
         }
       }
       return allEvents
+    },
+
+    getSchedules: async (_root, _args, { currentUser }) => {
+      if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
+
+      return await Schedule.find({ familyId: currentUser.familyId })
+    },
+
+    getSchedule: async (_root, { id }, { currentUser }) => {
+      if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
+
+      const schedule = await Schedule.findById(id)
+      if (!schedule) throw new Error("Lukujärjestystä ei löytynyt")
+      if (schedule.familyId.toString() !== currentUser.familyId.toString())
+        throw new Error("Ei oikeuksia tämän lukujärjestyksen katseluun")
+
+      return schedule
     }
   },
 
@@ -615,20 +637,14 @@ const resolvers = {
         throw new Error("Tuntematon kategoria")
       }
 
+      const members = await User.find({ familyId })
       let settings = await NotificationSettings.findOne({ familyId })
       if (!settings) {
-        settings = new NotificationSettings({
-          familyId,
-          wilma: [],
-          electricity: [],
-          calendar: [],
-          shopping: [],
-          todo: [],
-          chores: []
-        })
+        settings = new NotificationSettings(attachNotificationSettings(members, settings))
       }
 
       const existing = settings[type].find(e => e.userId.toString() === userId)
+
       if (existing) {
         if (enabled !== undefined) existing.enabled = enabled
         if (canManage !== undefined) existing.canManage = canManage
@@ -639,7 +655,7 @@ const resolvers = {
 
       await settings.save()
 
-      return type ? { familyId: settings.familyId, [type]: settings[type] } : settings
+      return settings
     },
 
     deleteFamily: async (_root, { familyId }, context) => {
@@ -790,7 +806,7 @@ const resolvers = {
       return true
     },
 
-    importWilmaCalendar: async (_, { icalUrl, owner, users }, { currentUser }) => {
+    importWilmaSchedule: async (_, { icalUrl, owner, users }, { currentUser }) => {
       if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
       const schedules = await Wilma.find({ familyId: currentUser.familyId })
       if (schedules.some(schedule => schedule.url === icalUrl)) {
@@ -820,7 +836,7 @@ const resolvers = {
       return schedule
     },
 
-    deleteWilmaCalendar: async (_, { owner }, { currentUser }) => {
+    deleteWilmaSchedule: async (_, { owner }, { currentUser }) => {
       if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
 
       const schedule = await Wilma.findOne({ owner, familyId: currentUser.familyId })
@@ -829,6 +845,52 @@ const resolvers = {
       await Wilma.findOneAndDelete({ _id: schedule._id })
 
       return { url: schedule.url }
+    },
+
+    addSchedule: async (_root, { input, owner }, { currentUser }) => {
+      if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
+
+      const schedule = new Schedule({
+        familyId: currentUser.familyId,
+        creatorId: currentUser._id,
+        monday: input.monday || [],
+        tuesday: input.tuesday || [],
+        wednesday: input.wednesday || [],
+        thursday: input.thursday || [],
+        friday: input.friday || [],
+        repeating: input.repeating ?? true,
+        startDate: input.startDate,
+        endDate: input.endDate,
+        viewUserIds: input.viewUserIds || [],
+      })
+
+      await schedule.save()
+      return schedule
+    },
+
+    updateSchedule: async (_root, { id, input }, { currentUser }) => {
+      if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
+
+      const schedule = await Schedule.findById(id)
+      if (!schedule) throw new Error("Lukujärjestystä ei löytynyt")
+      if (schedule.familyId.toString() !== currentUser.familyId.toString())
+        throw new Error("Ei oikeuksia muokata tätä lukujärjestystä")
+
+      Object.assign(schedule, input)
+      await schedule.save()
+      return schedule
+    },
+
+    deleteSchedule: async (_root, { id }, { currentUser }) => {
+      if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
+
+      const schedule = await Schedule.findById(id)
+      if (!schedule) throw new Error("Lukujärjestystä ei löytynyt")
+      if (schedule.familyId.toString() !== currentUser.familyId.toString())
+        throw new Error("Ei oikeuksia poistaa tätä lukujärjestystä")
+
+      await Schedule.findByIdAndDelete(id)
+      return "Lukujärjestys poistettu onnistuneesti"
     }
   }
 }

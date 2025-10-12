@@ -471,8 +471,8 @@ export const DELETE_CALENDAR_ENTRY = gql`
 
 
 export const IMPORT_WILMA_CALENDAR = gql`
-  mutation ImportWilmaCalendar($icalUrl: String!, $owner: String!, $users: [WilmaUserEntry!]!) {
-    importWilmaCalendar(icalUrl: $icalUrl, owner: $owner, users: $users) {
+  mutation importWilmaSchedule($icalUrl: String!, $owner: String!, $users: [WilmaUserEntry!]!) {
+    importWilmaSchedule(icalUrl: $icalUrl, owner: $owner, users: $users) {
       familyId
       url
       owner
@@ -484,22 +484,53 @@ export const IMPORT_WILMA_CALENDAR = gql`
 `
 
 export const GET_WILMA_CALENDAR = gql`
-  query getWilmaCalendar {
-    getWilmaCalendar {
+  query getWilmaSchedule {
+    getWilmaSchedule {
       title
       start
       end
-      teacher
-      room
-      owner
+      extendedProps {
+        teacher
+        room
+        owner
+      }
     }
   }
 `
 
 export const DELETE_WILMA_CALENDAR = gql`
-  mutation deleteWilmaCalendar($owner: ID!) {
-      deleteWilmaCalendar(owner: $owner) {
+  mutation deleteWilmaSchedule($owner: ID!) {
+      deleteWilmaSchedule(owner: $owner) {
         url
+    }
+  }
+`
+
+export const ADD_SCHEDULE = gql`
+  mutation addSchedule($input: ScheduleInput!, $owner: String!) {
+    addSchedule(input: $input, owner: $owner) {
+      id
+      startDate
+      endDate
+      repeating
+    }
+  }
+`
+
+export const GET_SCHEDULES = gql`
+  query {
+    getSchedules {
+      id
+      startDate
+      endDate
+      monday {
+        title
+        start
+        end
+        extendedProps {
+          owner
+        }
+      }
     }
   }
 `

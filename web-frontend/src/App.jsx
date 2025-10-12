@@ -33,7 +33,7 @@ function App() {
 
   const isDataLoaded = isLoggedIn ? (familyData?.family) : true
 
-  useEffect(() => {
+  useEffect( () => {
     if (isLoading) return
 
     if (isLoggedIn) {

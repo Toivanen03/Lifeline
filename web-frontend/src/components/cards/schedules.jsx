@@ -12,7 +12,7 @@ import { faChevronLeft, faChevronRight, faTrashCan } from '@fortawesome/free-sol
 import { useContext, useRef, useState, useEffect } from "react"
 import { useCalendarDay } from "../../contexts/CalendarDayContext"
 import { AuthContext } from "../../contexts/AuthContext"
-import { IMPORT_WILMA_CALENDAR, GET_WILMA_CALENDAR, DELETE_WILMA_CALENDAR } from "../../schema/queries"
+import { IMPORT_WILMA_CALENDAR, GET_WILMA_CALENDAR, DELETE_WILMA_CALENDAR, ADD_SCHEDULE, GET_SCHEDULES } from "../../schema/queries"
 import { useMutation, useQuery } from "@apollo/client/react"
 import WilmaLogo from '../../assets/Wilma_logo.png'
 import Dropdown from "react-bootstrap/Dropdown"
@@ -20,22 +20,23 @@ import Form from "react-bootstrap/Form"
 
 const Schedules = ({ notify, familyMembers }) => {
     const { currentUser } = useContext(AuthContext)
-    const [wilmaEvents, setWilmaEvents] = useState([])
+    const [scheduleEvents, setScheduleEvents] = useState([])
     const [showWilmaField, setShowWilmaField] = useState(false)
     const [selectedEvent, setSelectedEvent] = useState(null)
     const [showModal, setShowModal] = useState(false)
     const [wilmaUrl, setWilmaUrl] = useState("")
     const { data: wilmaData, loading: wilmaLoading, refetch: wilmaRefetch } = useQuery(GET_WILMA_CALENDAR)
-    const [importWilmaCalendar] = useMutation(IMPORT_WILMA_CALENDAR)
+    const { data: scheduleData, loading: scheduleLoading, refetch: scheduleRefetch } = useQuery(GET_SCHEDULES)
+    const [importWilmaSchedule] = useMutation(IMPORT_WILMA_CALENDAR)
     const { currentDate, setCurrentDate } = useCalendarDay()
     const [showLegend, setShowLegend] = useState(true)
     const [view, setView] = useState("timeGridWeek")
     const calendarRef = useRef(null)
     const [scheduleOwner, setScheduleOwner] = useState("")
-    const [deleteWilmaCalendar] = useMutation(DELETE_WILMA_CALENDAR, {
+    const [deleteWilmaSchedule] = useMutation(DELETE_WILMA_CALENDAR, {
         refetchQueries: [{ query: GET_WILMA_CALENDAR }],
     })
-    const [wilmaVisible, setWilmaVisible] = useState(
+    const [scheduleVisible, setScheduleVisible] = useState(
         Object.fromEntries(familyMembers.map(m => [m.id, false]))
     )
 
@@ -58,29 +59,48 @@ const Schedules = ({ notify, familyMembers }) => {
         })
 
     useEffect(() => {
-        if (!wilmaLoading && wilmaData) {
-            const events = wilmaData?.getWilmaCalendar?.map((e, index) => ({
-                id: index.toString(),
+        if (!wilmaLoading && !scheduleLoading && (wilmaData || scheduleData)) {
+            const wilmaEvents = wilmaData?.getWilmaSchedule?.map((e, index) => ({
+                id: `wilma-${index}`,
                 title: e.title,
                 start: e.start,
                 end: e.end,
                 allDay: false,
-                className: 'locked',
-                backgroundColor: ownerColors[e.owner],
-                borderColor: ownerColors[e.owner],
-                extendedProps: { teacher: e.teacher, room: e.room, owner: e.owner },
-            }))
-            setWilmaEvents(events)
+                className: "locked",
+                backgroundColor: ownerColors[e.extendedProps.owner],
+                borderColor: ownerColors[e.extendedProps.owner],
+                extendedProps: e.extendedProps,
+            })) || []
+
+            const manualEvents = scheduleData?.getSchedules?.flatMap((schedule, scheduleIndex) => {
+                const days = ["monday", "tuesday", "wednesday", "thursday", "friday"]
+                return days.flatMap(day =>
+                    schedule[day]?.map((e, index) => ({
+                    id: `manual-${scheduleIndex}-${day}-${index}`,
+                    title: e.title,
+                    start: e.start,
+                    end: e.end,
+                    allDay: e.allDay || false,
+                    backgroundColor: ownerColors[e.extendedProps?.owner],
+                    borderColor: ownerColors[e.extendedProps?.owner],
+                    extendedProps: e.extendedProps,
+                })) || []
+            )
+        }) || []
+
+        const allEvents = [...wilmaEvents, ...manualEvents]
+        setScheduleEvents(allEvents)
         }
-    }, [wilmaData, wilmaLoading])
+    }, [wilmaData, wilmaLoading, scheduleData, scheduleLoading])
+
 
     const addSchedule = async (url) => {
         try {
-            const usersArray = Object.entries(wilmaVisible)
+            const usersArray = Object.entries(scheduleVisible)
                 .filter(([_, visible]) => visible)
                 .map(([id]) => ({ id }))
 
-            const result = await importWilmaCalendar({
+            const result = await importWilmaSchedule({
                 variables: {
                     icalUrl: url,
                     owner: scheduleOwner,
@@ -111,12 +131,12 @@ const Schedules = ({ notify, familyMembers }) => {
     const handleDelete = async (owner) => {
         if (window.confirm("Haluatko varmasti poistaa lukujärjestyksen?"))
             try {
-                const { data } = await deleteWilmaCalendar({
+                const { data } = await deleteWilmaSchedule({
                     variables: { owner }
                 })
 
                 if (data) {
-                    notify(`Lukujärjestys ${data?.deleteWilmaCalendar?.url?.split('.fi/')[0]}.fi/ poistettu`, "success")
+                    notify(`Lukujärjestys ${data?.deleteWilmaSchedule?.url?.split('.fi/')[0]}.fi/ poistettu`, "success")
                 }
             } catch (err) {
                 notify(`VIRHE: ${err.message}`, "error")
@@ -125,7 +145,7 @@ const Schedules = ({ notify, familyMembers }) => {
 
     const handleScheduleOwnerChange = (id) => {
         setScheduleOwner(id)
-        setWilmaVisible(
+        setScheduleVisible(
             Object.fromEntries(
                 familyMembers.map(m => [m.id, m.id === id || m.id === currentUser.id])
         ))
@@ -255,7 +275,7 @@ const Schedules = ({ notify, familyMembers }) => {
                             <div className="row">
                                 <div className="col-12">
                                 {familyMembers
-                                    .filter(member => wilmaEvents.some(event => event.extendedProps?.owner === member.id))
+                                    .filter(member => scheduleEvents.some(event => event.extendedProps?.owner === member.id))
                                     .map(m => (
                                         <div
                                             key={m.id}
@@ -327,7 +347,7 @@ const Schedules = ({ notify, familyMembers }) => {
                                 {scheduleOwner ? ( 
                                     <Dropdown align="end">
                                         <Dropdown.Toggle variant="primary" className="w-100">
-                                            <span>Aseta lukujärjestyksen näkyvyys: {Object.values(wilmaVisible).filter(v => v === true).length > 0 && (Object.values(wilmaVisible).filter(v => v === true).length)}</span>
+                                            <span>Aseta lukujärjestyksen näkyvyys: {Object.values(scheduleVisible).filter(v => v === true).length > 0 && (Object.values(scheduleVisible).filter(v => v === true).length)}</span>
                                         </Dropdown.Toggle>
 
                                         <Dropdown.Menu style={{ minWidth: "250px", padding: "0.5rem 1rem" }}>
@@ -337,9 +357,9 @@ const Schedules = ({ notify, familyMembers }) => {
                                                     <Form.Check
                                                         type="switch"
                                                         id={`switch-${member.id}`}
-                                                        checked={wilmaVisible[member.id]}
+                                                        checked={scheduleVisible[member.id]}
                                                         onChange={() => {
-                                                            setWilmaVisible(prev => ({
+                                                            setScheduleVisible(prev => ({
                                                                 ...prev,
                                                                 [member.id]: !prev[member.id]
                                                             }))
@@ -385,7 +405,7 @@ const Schedules = ({ notify, familyMembers }) => {
                             locale={fiLocale}
                             height="auto"
                             headerToolbar={false}
-                            events={wilmaEvents}
+                            events={scheduleEvents}
                             eventOrder="owner"
                             slotLabelFormat={{
                                 hour: '2-digit',

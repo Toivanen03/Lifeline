@@ -129,7 +129,9 @@ const typeDefs = gql`
     userAccessRule(resourceType: String!, resourceId: ID!, userId: ID!, creatorId: ID!): AccessRule
     calendarEntries(familyId: ID!): [CalendarEntry!]!
     calendarEntry(id: ID!): CalendarEntry
-    getWilmaCalendar: [WilmaCalendarEvent!]!
+    getWilmaSchedule: [ScheduleEntry!]!
+    getSchedules: [Schedule!]!
+    getSchedule(id: ID!): Schedule
   }
 
   type Family {
@@ -165,23 +167,73 @@ const typeDefs = gql`
     invitedUserId: ID!
   }
 
-  type WilmaCalendarEvent {
+  type ScheduleEntry {
     title: String!
+    details: String
     start: String!
     end: String!
+    allDay: Boolean
+    extendedProps: ScheduleExtendedProps
+  }
+
+  type ScheduleExtendedProps {
     teacher: String
     room: String
-    owner: String!
+    owner: String
   }
 
   type WilmaSchedule {
     familyId: String!
     url: String!
     owner: String!
-    users: [WilmaUser!]!
+    users: [ScheduleUser!]!
   }
 
-  type WilmaUser {
+  input ScheduleExtendedPropsInput {
+    teacher: String
+    room: String
+    owner: String
+  }
+
+  type Schedule {
+    id: ID!
+    familyId: ID!
+    creatorId: ID!
+    monday: [ScheduleEntry]
+    tuesday: [ScheduleEntry]
+    wednesday: [ScheduleEntry]
+    thursday: [ScheduleEntry]
+    friday: [ScheduleEntry]
+    repeating: Boolean!
+    startDate: String!
+    endDate: String!
+    viewUserIds: [ID]
+    createdAt: String!
+    updatedAt: String!
+  }
+
+  input ScheduleEntryInput {
+    title: String!
+    details: String
+    start: String!
+    end: String!
+    allDay: Boolean
+    extendedProps: ScheduleExtendedPropsInput
+  }
+
+  input ScheduleInput {
+    monday: [ScheduleEntryInput]
+    tuesday: [ScheduleEntryInput]
+    wednesday: [ScheduleEntryInput]
+    thursday: [ScheduleEntryInput]
+    friday: [ScheduleEntryInput]
+    repeating: Boolean
+    startDate: String!
+    endDate: String!
+    viewUserIds: [ID]
+  }
+
+  type ScheduleUser {
     id: String!
   }
 
@@ -189,7 +241,7 @@ const typeDefs = gql`
     id: String!
   }
 
-  type DeletedSchedule {
+  type DeletedWilmaSchedule {
     url: String!
   }
 
@@ -203,7 +255,7 @@ const typeDefs = gql`
     updatePassword(newPassword: String, token: String): User
     verifyEmailOrInvite(token: String, familyId: String): User
     requestPasswordReset(email: String!): Boolean
-    updateNotifications(familyId: ID, userId: ID!, type: String!, enabled: Boolean, canManage: Boolean, mobileNotifications: Boolean): UserSettingEntry
+    updateNotifications(familyId: ID, userId: ID!, type: String!, enabled: Boolean, canManage: Boolean, mobileNotifications: Boolean): [UserSettingEntry]
     resendEmailVerificationToken(email: String!): Boolean
     updateParent(userId: ID!, parent: Boolean!): User
     updateBirthday(userId: ID!, birthday: String): User
@@ -212,8 +264,11 @@ const typeDefs = gql`
     createCalendarEntry(familyId: ID!, input: CalendarEntryInput!): CalendarEntry!
     updateCalendarEntry(id: ID!, input: CalendarEntryInput!): CalendarEntry!
     deleteCalendarEntry(id: ID!): Boolean!
-    importWilmaCalendar(icalUrl: String!, owner: String!, users: [WilmaUserEntry!]!): WilmaSchedule!
-    deleteWilmaCalendar(owner: ID!): DeletedSchedule
+    importWilmaSchedule(icalUrl: String!, owner: String!, users: [WilmaUserEntry!]!): WilmaSchedule!
+    deleteWilmaSchedule(owner: ID!): DeletedWilmaSchedule
+    addSchedule(input: ScheduleInput!, owner: String!): Schedule!
+    updateSchedule(id: ID!, input: ScheduleInput!): Schedule!
+    deleteSchedule(id: ID!): String!
   }
 `
 
