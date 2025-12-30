@@ -25,7 +25,7 @@ All rights reserved © 2025 Simo Toivanen.
 ## Mobiilisovellus perheen arjen hallinnan helpottamiseksi
 Sovellus tulee yhdistämään monia erilaisia toimintoja, joista on hyötyä arjen toimintojen hallinnassa.
 Keskitetty hallinta esimerkiksi tehtävälistoille, aikatauluille, viestinnälle ja kotitöille!
-Voit määrittää ilmoitusasetukset lastesi puolesta, tai antaa heidä valita vastaanotettavat ilmoitukset. Sinä päätät.
+Voit määrittää ilmoitusasetukset lastesi puolesta, tai antaa heidän valita vastaanotettavat ilmoitukset. Sinä päätät.
 Käyttäjäkohtaiset roolit (lapsi, vanhempi) sekä personoidut asetukset kaikille käyttäjille.
 
 **Huom:** Tämä **ei ole avoimen lähdekoodin** projekti. Lähdekoodi on vain tarkasteltavissa.  
