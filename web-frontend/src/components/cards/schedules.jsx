@@ -23,7 +23,12 @@ const Schedules = ({ notify, familyMembers }) => {
     const [scheduleEvents, setScheduleEvents] = useState([])
     const [showWilmaField, setShowWilmaField] = useState(false)
     const [selectedEvent, setSelectedEvent] = useState(null)
-    const [showModal, setShowModal] = useState(false)
+    const [showDetailsModal, setShowDetailsModal] = useState(false)
+    const [showAddScheduleModal, setShowAddScheduleModal] = useState(false)
+    const [otherScheduleEvent, setOtherScheduleEvent] = useState(null)
+    const [selectedDate, setSelectedDate] = useState(null)
+    const [selectedClass, setSelectedClass] = useState(null)
+    const [highlightedDate, setHighlightedDate] = useState(null)
     const [wilmaUrl, setWilmaUrl] = useState("")
     const { data: wilmaData, loading: wilmaLoading, refetch: wilmaRefetch } = useQuery(GET_WILMA_CALENDAR)
     const { data: scheduleData, loading: scheduleLoading, refetch: scheduleRefetch } = useQuery(GET_SCHEDULES)
@@ -32,6 +37,7 @@ const Schedules = ({ notify, familyMembers }) => {
     const [showLegend, setShowLegend] = useState(true)
     const [view, setView] = useState("timeGridWeek")
     const calendarRef = useRef(null)
+    const otherCalendarRef = useRef(null)
     const [scheduleOwner, setScheduleOwner] = useState("")
     const [deleteWilmaSchedule] = useMutation(DELETE_WILMA_CALENDAR, {
         refetchQueries: [{ query: GET_WILMA_CALENDAR }],
@@ -143,6 +149,10 @@ const Schedules = ({ notify, familyMembers }) => {
             }
     }
 
+    const handleOtherSchedule = () => {
+        console.log("HEP")
+    }
+
     const handleScheduleOwnerChange = (id) => {
         setScheduleOwner(id)
         setScheduleVisible(
@@ -191,6 +201,28 @@ const Schedules = ({ notify, familyMembers }) => {
         }
     }
 
+    const handleHighlightedDay = (info) => {
+        const date = new Date(info.date)
+        date.setDate(date.getDate() + 1)
+        const clickedDateStr = date.toISOString().slice(0, 10)
+        const allDayCells = otherCalendarRef.current.elRef.current.querySelectorAll("[data-date]")
+
+        allDayCells.forEach((el) => {
+            const cellDate = el.getAttribute("data-date")
+            if (cellDate === clickedDateStr) {
+                el.classList.add("highlighted-day")
+            } else {
+                el.classList.remove("highlighted-day")
+            }
+        })
+
+        setHighlightedDate(info.date)
+        const end = new Date(info.date)
+        end.setHours(date.getHours() + 1)
+        setSelectedEvent(null)
+        setSelectedDate({ start: info.date, end })
+    }
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -223,15 +255,25 @@ const Schedules = ({ notify, familyMembers }) => {
                         {currentUser.parent && 
                         <>
                             {!showWilmaField ? (
-                                <button
-                                    className="btn btn-info"
-                                    onClick={() => {
-                                        setShowWilmaField(true)
-                                        setShowLegend(false)
-                                        }
-                                    }>
-                                    <img src={WilmaLogo} alt="Wilma logo" width={'40px'} /> - integraatio
-                                </button>
+                                <>
+                                    <button
+                                        className="btn btn-info mb-3"
+                                        onClick={() => {
+                                            setShowWilmaField(true)
+                                            setShowLegend(false)
+                                            }
+                                        }>
+                                        <img src={WilmaLogo} alt="Wilma logo" width={'40px'} /> - integraatio
+                                    </button>
+                                    <button
+                                        className="btn btn-info"
+                                        onClick={() => {
+                                            setShowAddScheduleModal(true)
+                                            }
+                                        }>
+                                        Lisää lukujärjestys
+                                    </button>
+                                </>
                             ) : (
                                 <button
                                     className="btn btn-info w-100"
@@ -414,13 +456,13 @@ const Schedules = ({ notify, familyMembers }) => {
                             }}
                             eventClick={(info) => {
                                 setSelectedEvent(info.event)
-                                setShowModal(true)
+                                setShowDetailsModal(true)
                             }}
                         />
                     </div>
                 </div>
             </div>
-            <Modal show={showModal} onHide={() => setShowModal(false)}>
+            <Modal show={showDetailsModal} onHide={() => setShowDetailsModal(false)}>
                 <Modal.Header>
                     <Modal.Title className="row w-100">
                         <div className="col-6">
@@ -457,6 +499,118 @@ const Schedules = ({ notify, familyMembers }) => {
                                 <span> - </span> {selectedEvent?.end.toLocaleTimeString("fi-FI", { hour: '2-digit', minute: '2-digit', hour12: false })}
                         </div>
                     </div>
+                </Modal.Body>
+            </Modal>
+            <Modal show={showAddScheduleModal} onHide={() => setShowAddScheduleModal(false)} size="xl">
+                <Modal.Header>
+                    <Modal.Title className="row w-100 align-items-center">
+                        <div className="col-2 mt-2">
+                            <h5>Lisää viikko</h5>
+                        </div>
+                        <div className="col-2">
+                            <span style={{color: ownerColors[scheduleOwner]}}>{familyMembers.find(u => u.id === scheduleOwner)?.name.split(' ')[0]}</span>
+                        </div>
+                        <div className="col-4">
+                            <Dropdown align="end">
+                                <Dropdown.Toggle variant="primary" className="p-2" style={{width: '20vw'}}>
+                                    {scheduleOwner
+                                        ? <span>Lukujärjestyksen haltija: {scheduleOwner === currentUser.id ? "Minä" : familyMembers.find(u => u.id === scheduleOwner)?.name.split(' ')[0]}</span>
+                                        : "Aseta lukujärjestyksen haltija"}
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu style={{ minWidth: "150px", padding: "0.5rem 1rem" }}>
+                                    {familyMembers.map(member => (
+                                        <div key={member.id} className="d-flex justify-content-between align-items-center mb-2">
+                                            <span>{currentUser.id === member.id ? "Minä" : member.name.split(' ')[0]}</span>
+                                            <Form.Check
+                                                type="switch"
+                                                id={`switch-${member.id}`}
+                                                checked={scheduleOwner === member.id}
+                                                onChange={() => handleScheduleOwnerChange(member.id)}
+                                            />
+                                        </div>
+                                    ))}
+                                </Dropdown.Menu>
+                            </Dropdown>
+                        </div>
+                        <div className="col-4">
+                            <Dropdown align="end">
+                                <Dropdown.Toggle variant="primary" className="p-2" style={{width: '20vw'}}>
+                                    <span>Aseta lukujärjestyksen näkyvyys: {Object.values(scheduleVisible).filter(v => v === true).length > 0 && (Object.values(scheduleVisible).filter(v => v === true).length)}</span>
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu style={{ minWidth: "150px", padding: "0.5rem 1rem" }}>
+                                    {familyMembers.map(member => (
+                                        <div key={member.id} className="d-flex justify-content-between align-items-center mb-2">
+                                            <span>{currentUser.id === member.id ? "Minä" : (member.name.split(' ')[0])}</span>
+                                            <Form.Check
+                                                type="switch"
+                                                id={`switch-${member.id}`}
+                                                checked={scheduleVisible[member.id]}
+                                                onChange={() => {
+                                                    setScheduleVisible(prev => ({
+                                                        ...prev,
+                                                        [member.id]: !prev[member.id]
+                                                    }))
+                                                }}
+                                                disabled={member.id === scheduleOwner || member.id === currentUser.id}
+                                            />
+                                        </div>
+                                    ))}
+                                </Dropdown.Menu>
+                            </Dropdown>
+                        </div>
+                        </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <div className="row">
+                        <FullCalendar
+                                ref={otherCalendarRef}
+                                plugins={[dayGridPlugin, interactionPlugin, timeGridPlugin]}
+                                allDaySlot={false}
+                                initialView={"timeGridWeek"}
+                                slotMinTime="08:00:00"
+                                slotMaxTime="16:30:00"
+                                slotLabelInterval="00:30:00"
+                                weekends={false}
+                                locale={fiLocale}
+                                height="auto"
+                                headerToolbar={false}
+                                eventOrder="owner"
+                                slotLabelFormat={{
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: false,
+                                    meridiem: false,
+                                }}
+                                dateClick={handleHighlightedDay}
+                                events={null}
+                                eventClick={(info) => {
+                                    info.jsEvent.preventDefault()
+                                    setSelectedClass({
+                                        id: info.event.id,
+                                        title: info.event.title,
+                                        start: info.event.start,
+                                        end: info.event.end,
+                                        details: info.event.extendedProps?.details || "",
+                                        links: info.event.extendedProps?.links || [],
+                                        classNames: info.event.classNames || [],
+                                        creatorId: info.event.extendedProps?.creatorId
+                                    })
+                                    setSelectedDate(null)
+                                }}
+                                editable
+                                eventDrop={(info) => updateEvent(info.event.id, { start: info.event.start.toISOString(), end: info.event.end?.toISOString() })}
+                                eventResize={(info) => updateEvent(info.event.id, { start: info.event.start.toISOString(), end: info.event.end?.toISOString() })}
+                            />
+                        </div>
+                        <div className="row p-3 justify-content-center">
+                            <button
+                                className="btn btn-info"
+                                style={{width: '10vw'}}
+                                onClick={() => handleOtherSchedule()}
+                                >
+                                Tallenna
+                            </button>
+                        </div>
                 </Modal.Body>
             </Modal>
         </motion.div>
