@@ -3,7 +3,7 @@
 ## A mobile app to make family life easier
 This app will combine several handy functions to organize your familylife.
 View and control your todo-lists, schedules, chores and messaging centralized with your family within one app!
-Manage all notifications behalf your children, or let them control their settings by theirselves. You decide.
+Manage all notifications on behalf your children, or let them control their settings by theirselves. You decide.
 Personalized roles (child, parent) and settings for all users.
 
 **Note:** This project is **not open source**. The source code is provided only for reference and viewing purposes.
@@ -25,7 +25,7 @@ All rights reserved © 2025 Simo Toivanen.
 ## Mobiilisovellus perheen arjen hallinnan helpottamiseksi
 Sovellus tulee yhdistämään monia erilaisia toimintoja, joista on hyötyä arjen toimintojen hallinnassa.
 Keskitetty hallinta esimerkiksi tehtävälistoille, aikatauluille, viestinnälle ja kotitöille!
-Voit määrittää ilmoitusasetukset lastesi puolesta, tai antaa heidä valita vastaanotettavat ilmoitukset. Sinä päätät.
+Voit määrittää ilmoitusasetukset lastesi puolesta, tai antaa heidän valita vastaanotettavat ilmoitukset. Sinä päätät.
 Käyttäjäkohtaiset roolit (lapsi, vanhempi) sekä personoidut asetukset kaikille käyttäjille.
 
 **Huom:** Tämä **ei ole avoimen lähdekoodin** projekti. Lähdekoodi on vain tarkasteltavissa.  
