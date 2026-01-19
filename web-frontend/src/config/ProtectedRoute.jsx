@@ -21,7 +21,7 @@ const ProtectedRoute = () => {
       logout()
       setHasLoggedOut(true)
     }
-  }, [timeoutReached, hasLoggedOut, isLoggedIn, logout])
+  }, [timeoutReached, hasLoggedOut, isLoggedIn])
 
   if (isLoading) return <div>Ladataan...</div>
 

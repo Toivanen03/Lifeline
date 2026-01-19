@@ -3,7 +3,7 @@ import { useMutation } from "@apollo/client/react"
 import { ADD_USER } from "../schema/queries"
 import { useState, useEffect } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
-import { updatePasswordSchema, validateFullName, validateEmail } from "../../../mobile-app/schema/validateUserData"
+import { updatePasswordSchema, validateFullName, validateEmail } from "../schema/validateUserData"
 
 const Register = ({ notify }) => {
     const { state } = useLocation()
