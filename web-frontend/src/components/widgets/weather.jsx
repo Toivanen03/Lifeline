@@ -27,9 +27,11 @@ export const WeatherWidget = () => {
   const wind = 'Tuuli: ' + data.weather.wind_speed + ' m/s'
   const visibility =
     'Näkyvyys: ' +
-    (data.weather.visibility > 1000
-      ? (Math.round(data.weather.visibility / 500) / 2) + ' km'
-      : data.weather.visibility.toFixed(0) + ' m')
+    (typeof v === 'number'
+      ? v > 1000
+        ? (Math.round(v / 500) / 2) + ' km'
+        : v.toFixed(0) + ' m'
+      : '- m')
   const clouds = 'Pilvisyys: ' + data.weather.clouds + '%'
   const location = data.weather.location
   const icon = data.weather.icon
