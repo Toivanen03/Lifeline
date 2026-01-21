@@ -38,7 +38,7 @@ const getPriceForDate = (date, prices) => {
 }
 
 const requireParent = (user) => {
-  if (!user.parent) {
+  if (!user.parent || user.username === 'tauno.testaaja@simotoivanen.fi') {
     throw new Error("Ei valtuuksia!")
   }
 }
