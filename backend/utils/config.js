@@ -4,8 +4,10 @@ const config = () => {
     } else if (process.env.DEVICE === 'desktop') {
         if (process.env.npm_lifecycle_event === 'dev') {
             return process.env.HOST_DEV
-        } else return process.env.HOST_PROD
+        }
     }
+
+    return process.env.HOST_PROD
 }
 
 export default config
