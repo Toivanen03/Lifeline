@@ -625,6 +625,32 @@ const resolvers = {
       return invitedUser
     },
 
+    resendEmailVerificationToken: async (_, { email }) => {
+      const user = await User.findOne({ username: email.toLowerCase().trim() })
+      if (!user) return true
+
+      const now = new Date()
+      let emailVerificationToken = user.emailVerificationToken
+
+      if (!emailVerificationToken || user.emailVerificationTokenExpiry < now) {
+        const expiry = 15 * 60 * 1000
+        const expiryMinutes = expiry / 1000
+
+        emailVerificationToken = jwt.sign(
+          { id: user._id },
+          process.env.JWT_SECRET,
+          { expiresIn: expiryMinutes }
+        )
+
+        user.emailVerificationToken = emailVerificationToken
+        user.emailVerificationTokenExpiry = new Date(Date.now() + expiry)
+        await user.save()
+      }
+
+      await MailSender(user, emailVerificationToken, 'confirm-email')
+      return true
+    },
+
     updateNotifications: async (_root, { familyId, userId, type, enabled, canManage, mobileNotifications }, context) => {
       const currentUser = context.currentUser
       if (!currentUser) throw new Error("Ei kirjautunutta käyttäjää")
