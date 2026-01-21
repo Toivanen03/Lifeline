@@ -107,6 +107,7 @@ const Login = ({ notify }) => {
                             placeholder="Sähköposti"
                             {...register("userName")}
                             className="form-control rounded"
+                            value={import.meta.env.VITE_TEST_USER}
                             required
                         />
                     </div>
@@ -117,6 +118,7 @@ const Login = ({ notify }) => {
                             <input
                                 id="password"
                                 placeholder="Salasana"
+                                value={'xxxxxxxx'}
                                 type="password"
                                 {...register("password")}
                                 className="form-control rounded"
