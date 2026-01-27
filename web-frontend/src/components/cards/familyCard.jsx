@@ -113,7 +113,7 @@ const Family = ({ notify, familyMembers }) => {
         const payload = finalEmails.map(u => ({ ...u, familyId }))
 
         try {
-            const response = await fetch('/api/lifeline-invitation', {
+            const response = await fetch(import.meta.env.VITE_API_PATH + '/lifeline-invitation', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

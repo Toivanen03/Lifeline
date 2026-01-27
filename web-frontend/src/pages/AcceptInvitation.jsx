@@ -22,7 +22,7 @@ const AcceptInvitation = ({ notify }) => {
             }
 
             try {
-                const res = await fetch('/api/accept-invitation', {
+                const res = await fetch(import.meta.env.VITE_API_PATH + '/accept-invitation', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ invitationToken: token })
