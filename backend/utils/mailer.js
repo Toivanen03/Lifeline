@@ -1,9 +1,10 @@
 import fs from 'fs'
 import path from 'path'
 import nodemailer from 'nodemailer'
+import config from './config.js'
 
 const MailSender = async (user, token, type = 'reset-password') => {
-    const url = 'https://www.lifeline.simotoivanen.fi'
+    const url = config() + '/api'
     const resetMail = process.env.RESET_MAIL
 
     const transporter = nodemailer.createTransport({
