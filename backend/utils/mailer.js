@@ -4,7 +4,7 @@ import nodemailer from 'nodemailer'
 import config from './config.js'
 
 const MailSender = async (user, token, type = 'reset-password') => {
-    const url = config() + '/api'
+    const url = config()
     const resetMail = process.env.RESET_MAIL
 
     const transporter = nodemailer.createTransport({
