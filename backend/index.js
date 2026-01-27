@@ -56,7 +56,7 @@ const PORT = process.env.PORT
 const MONGODB_URI = process.env.MONGODB_URI
 
 await server.start()
-server.applyMiddleware({ app, path: '/graphql', cors: { origin: ['https://lifeline.simotoivanen.fi', 'https://www.lifeline.simotoivanen.fi', 'https://simotoivanen.fi', 'https://www.simotoivanen.fi', 'https://simotoivanen.fi/lifeline', 'https://www.simotoivanen.fi/lifeline'], credentials: true } })
+server.applyMiddleware({ app, path: '/graphql', cors: { origin: ['https://lifeline.simotoivanen.fi', 'https://www.lifeline.simotoivanen.fi', 'https://simotoivanen.fi', 'https://www.simotoivanen.fi'], credentials: true } })
 
 mongoose.connect(MONGODB_URI)
   .then(() => {

@@ -38,7 +38,7 @@ const getPriceForDate = (date, prices) => {
 }
 
 const requireParent = (user) => {
-  if (!user.parent || user.username === 'tauno.testaaja@simotoivanen.fi') {
+  if (!user || !user.parent || user.username === 'tauno.testaaja@simotoivanen.fi') {
     throw new Error("Ei valtuuksia!")
   }
 }
@@ -466,6 +466,7 @@ const resolvers = {
     },
 
     updateParent: async (_root, { userId, parent }, context) => {
+      requireParent(context.currentUser)
       const currentUser = context.currentUser
 
       if (!currentUser || !currentUser.parent) {
@@ -485,6 +486,7 @@ const resolvers = {
     },
 
     updateBirthday: async (_root, { userId, birthday }, context) => {
+      requireParent(context.currentUser)
       const currentUser = context.currentUser
 
       if (!currentUser || !currentUser.parent) {
@@ -556,6 +558,8 @@ const resolvers = {
         return true
       }
 
+      if (user.username === 'tauno.testaaja@simotoivanen.fi') throw new Error("Testikäyttäjä ei voi vaihtaa salasanaa.")
+
       const token = crypto.randomBytes(32).toString('hex')
 
       user.resetToken = token
@@ -566,6 +570,7 @@ const resolvers = {
     },
 
     updatePassword: async (_root, { newPassword, token }, context) => {
+      if (context.currentUser.username === 'tauno.testaaja@simotoivanen.fi') throw new Error("Testikäyttäjä ei voi vaihtaa salasanaa.")
       let user
 
       if (context.currentUser) {
@@ -633,6 +638,7 @@ const resolvers = {
     resendEmailVerificationToken: async (_, { email }) => {
       const user = await User.findOne({ username: email.toLowerCase().trim() })
       if (!user) return true
+      if (user.username === 'tauno.testaaja@simotoivanen.fi') throw new Error("Testikäyttäjällä ei ole vaadittavia oikeuksia.")
 
       const now = new Date()
       let emailVerificationToken = user.emailVerificationToken
@@ -690,7 +696,7 @@ const resolvers = {
     },
 
     deleteFamily: async (_root, { familyId }, context) => {
-      if (!context.currentUser || !context.currentUser.owner) {
+      if (!context.currentUser || !context.currentUser.owner || context.currentUser.username === 'tauno.testaaja@simotoivanen.fi') {
         throw new Error("Ei oikeuksia")
       }
 
